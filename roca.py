@@ -7,6 +7,8 @@ import itertools
 from functools import reduce
 import subprocess
 import os
+import binascii
+
 
 # Projekterzeichnis
 
@@ -164,60 +166,71 @@ def prime_factors(n):
         primfac.append(n)
     return primfac
 
-
-def a2(M, n, div):
+# M, Primfaktoren von M und Kandidat für Ordnung
+def a2(M, pfo, ord_strich):
     M_strich = M
-    ord_strich = div
-    orders = {}
 
-    for p in n:
-        orders[p] = ord(p)
-
-        if orders[p] % ord_strich != 0:
+    for p in reversed(pfo):
+        # ord_pi teilt nicht ord_strich
+        if ord_strich % ord(p) != 0:
             M_strich /= p
-    return M_strich
+            pfo.remove(p)
+
+    return M_strich, pfo
 
 def choose_divisor(M, Mold, ord, ordold):
+    #return 1
     return (math.log(ordold, 2) - math.log(ord, 2)) / (math.log(Mold, 2) - math.log(M, 2))
 
-def greedy_heuristic(n, M):
+def greedy_heuristic(n, M, limes):
     ord_M = order(n)
     pfo = prime_factors(ord_M)
+    pf_M = n
 
-    M_new = a2(M, n, ord_M/max(pfo))
-    print(M_new)
-    ord_new = ord_M / max(pfo)
+    M_old = M
+    ord_new = ord_M
 
-    div = choose_divisor(M_new, M, ord_new, ord_M)
-    print(div)
+    for j in pfo:
+        count = 0
+        for k in range(0, len(pfo)):
+            if pfo[k] == j:
+                count += 1
+                pfo[k] = pow(j, count)
 
 
+    #while math.log(M_old, 2) > limes:
+    div_dict = {}
+    #print("Primfaktor von Kandidat M: " + str(pf_M))
+    #print("Primfaktor von Ordnung von M: " + str(pfo))
 
+    #TODO Händisch verifizieren ob die Werte nach der ersten Runde passen.
+
+    for p in reversed(pfo): # 53 ist in der Ordnung dabei und im Paper nicht, warum?
+
+        M_new, pf_M = a2(M_old, pf_M, ord_M/p) # Kandidat für M_strich
+        #print("M NEW: " + str(M_new))
+        if M_new == M_old:
+            div = 0
+        else:
+            div = choose_divisor(M_new, M_old, ord_M/p, ord_M)
+
+        div_dict[p] = div
+        #print("Div: " + str(div))
+
+        #print(div_dict)
+        best_candidate = max(div_dict, key=div_dict.get)
+        #print(best_candidate)
+        M_old /= best_candidate
+        ord_new /= best_candidate
+        pfo.remove(best_candidate)
+        print("M Strich nach erster Runde: " + str(M_old))
+        print("ORD NEW: " + str(ord_new))
+        print("PRIME Factors: " + str(pfo))
 
 def get_m(n, limes):
     M = calcM(n)
 
-    greedy_heuristic(n, M)
-
-
-
-''' for po in reversed(pf):
-        M_strich = M
-        for p in reversed(n):
-            orders[p] = ord(p)
-            if M_strich % po != 0:
-                M_strich = M_strich / po
-                #print(str(M_strich) + " / " + str(p))
-                if math.log(M_strich, 2) < limes:
-                    ergs.add((M_strich, po))
-                    break
-    for erg in ergs:
-        print(erg)
-
-
-    #print(M_strich)
-    return M_strich
-'''
+    greedy_heuristic(n, M, limes)
 
 
 if __name__ == "__main__":
@@ -225,12 +238,9 @@ if __name__ == "__main__":
         pub_key = RSA.importKey(f.read())
         param = get_param(pub_key.size())
         n = get_primes(param['anz'])
+        M = calcM(n)
 
-
-        # print pub_key.n
         limes = math.log(pub_key.n, 2) / 4
-        M = get_m(n, limes)
-        #y = 83*53*41*29*37*23*17*99
-        #print(M/y)
+        greedy_heuristic(n, M, limes)
 
     #roca(pub_key.n, M, param['m'], param['t'])
