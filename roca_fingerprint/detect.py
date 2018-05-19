@@ -57,13 +57,12 @@ import traceback
 import datetime
 from math import ceil, log
 
-
 #            '%(asctime)s %(hostname)s %(name)s[%(process)d] %(levelname)s %(message)s'
 LOG_FORMAT = '%(asctime)s [%(process)d] %(levelname)s %(message)s'
 
-
 logger = logging.getLogger(__name__)
 coloredlogs.install(level=logging.INFO, fmt=LOG_FORMAT)
+
 
 #
 # Helper functions & classes
@@ -433,6 +432,7 @@ class AutoJSONEncoder(json.JSONEncoder):
     """
     JSON encoder trying to_json() first
     """
+
     def default(self, obj):
         try:
             return obj.to_json()
@@ -454,6 +454,7 @@ class TestResult(object):
     """
     Fingerprint test result holder.
     """
+
     def __init__(self, data=None, **kwargs):
         self._data = collections.OrderedDict(data if data is not None else {})
         for key, value in iteritems(kwargs):
@@ -506,8 +507,10 @@ class DlogFprint(object):
     No external python dependencies are needed (for sake of compatibility).
     Detection could be optimized using sympy / gmpy but that would add significant dependency overhead.
     """
+
     def __init__(self, max_prime=167, generator=65537):
-        self.primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101,
+        self.primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+                       101,
                        103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167]
 
         self.max_prime = max_prime
@@ -533,10 +536,10 @@ class DlogFprint(object):
 
         d = DlogFprint.discrete_log(modulus, self.generator,
                                     self.generator_order, self.generator_order_decomposition, self.m)
-
-	f= open("tmp.txt","w+")
-	f.write("%d" % d)
-	f.close()
+        print(modulus)
+        f = open("tmp.txt", "w+")
+        f.write("%d" % d)
+        f.close()
 
         return d is not None
 
@@ -740,7 +743,7 @@ class DlogFprint(object):
                 return None
 
         ccrt = DlogFprint.chinese_remainder(moduli, remainders)
-        logger.info('.. ccrt: . . . %d' %ccrt)
+        logger.info('.. ccrt: . . . %d' % ccrt)
 
         return ccrt
 
@@ -766,7 +769,7 @@ class RocaFingerprinter(object):
 
         # Minimal modulo size to avoid false positives on the random data and very short moduli
         kwargs.setdefault('minimal_modulus_bits', 256)
-        kwargs.setdefault('minimal_modulus', 2**kwargs.get('minimal_modulus_bits'))
+        kwargs.setdefault('minimal_modulus', 2 ** kwargs.get('minimal_modulus_bits'))
         self.minimal_modulus_bits = kwargs.get('minimal_modulus_bits')
         self.minimal_modulus = kwargs.get('minimal_modulus')
 
@@ -969,7 +972,7 @@ class RocaFingerprinter(object):
 
         self.tested += 1
         positive = self.dlog_fprinter.fprint(modulus)
-	logger.info('.... test')
+        logger.info('.... test')
 
         if positive:
             self.found += 1
@@ -1977,7 +1980,7 @@ class RocaFingerprinter(object):
                 logger.warning('JKS password file %s does not exist' % self.args.jks_pass_file)
             with open(self.args.jks_pass_file) as fh:
                 self.jks_file_passwords = sorted(list(set([x.strip() for x in fh])))
-                
+
         if self.jks_file_passwords is None:
             self.jks_file_passwords = []
 
@@ -2149,10 +2152,9 @@ class RocaFingerprinter(object):
             self.switch_fingerprint_method(True)
 
         ret = self.process_inputs()
-
+        ret = ['/home/klaus/PycharmProjects/ROCA_SAS/tmp.pub']
         if self.args.dump:
             self.dump(ret)
-
 
         logger.info('### SUMMARY ####################')
         logger.info('Records tested: %s' % self.tested)
@@ -2167,7 +2169,7 @@ class RocaFingerprinter(object):
         logger.info('.. LDIFF certs: . . %s' % self.num_ldiff_cert)
         logger.info('.. JKS certs: . . . %s' % self.num_jks_cert)
         logger.info('.. PKCS7: . . . . . %s' % self.num_pkcs7_cert)
-	logger.info('.. test: -........%s' % self.has_fingerprint)
+        logger.info('.. test: -........%s' % self.has_fingerprint)
         logger.debug('. Total RSA keys . %s  (# of keys RSA extracted & analyzed)' % self.num_rsa)
         if self.found > 0:
             logger.info('Fingerprinted keys found: %s' % self.found)
@@ -2265,4 +2267,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

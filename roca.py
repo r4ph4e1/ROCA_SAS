@@ -1,8 +1,11 @@
 # coding: utf8
 from Crypto.PublicKey import RSA
-
+import threading
+import multiprocessing
 from fractions import gcd as gcd
 import math
+from sage.all_cmdline import *
+# from roca_fingerprint.detect import RocaFingerprinter
 import itertools
 from functools import reduce
 import subprocess
@@ -23,31 +26,57 @@ Parameter:
 """
 
 
-def roca(N, M, m, t):
-    # N = p * q
-    # M = produkt der ersten n primzahlen
-    # m =
-    # t =
-    # M_strich =
+class rocaCracker(threading.Thread):
+    def __init__(self, id, N, M, m, t, c, ord):
+        threading.Thread.__init__(self)
+        self.id = id
+        self.N = N
+        self.M = M
+        self.m = m
+        self.t = t
+        self.c = c
+        self.ord = ord
+        self.beta = 0.5
+        self.X = 2 * pow(N, self.beta) / M
+        self.start = self.get_start(c, ord, id)
+        self.end = self.get_end(c, ord, id)
 
-    # TODO Polynom f(x) erstellen,
-    # c = diskreter Logarithmus von N zur Basis 65537 mod M
-    c_strich = math.log(N, 65537)
-    # ord = Ordnung von 65537 zur Basis M
-    p = 0
+    def run(self):
+        #print "ID: %d, Start: %d, End: %d" % (self.id, self.start, self.end)
+        for a in list(IntegerRange(self.start, self.end)):
+            print(a)
+            #Todo: crack the shit
 
-    # Todo: script einbinden
-    c = call_fingerprint_tool
-    ord = order(n)
-    beta = 0.5
-    X = 2 * pow(N, beta) / M
+    def get_end(self, c, ord, id):
+        start = c/2
+        end = (c + ord) /2
+        count = end - start
+        cpus = multiprocessing.cpu_count()
+        div = floor(count/cpus)
+        return start + div * (id + 1)-1
 
-    for a in range(c / 2, (c + ord) / 2):
-        # TODO k = Coppersmith(f(x), N, beta, m, t, X)
-        # TODO p = k * M + (65337^a mod M)
+    def get_start(self, c, ord, id):
+        start = c/2
+        end = (c + ord) /2
+        count = end - start
+        cpus = multiprocessing.cpu_count()
+        div = floor(count/cpus)
+        return start + div * id
 
-        if N % p == 0:
-            return p
+    def roca(N, M, m, t):
+        # N = p * q
+        # M = produkt der ersten n primzahlen
+        # m =
+        # t =
+        # M_strich =
+        p = 0
+
+        for a in range(c / 2, (c + ord) / 2):
+            # TODO k = Coppersmith(f(x), N, beta, m, t, X)
+            # TODO p = k * M + (65337^a mod M)
+
+            if N % p == 0:
+                return p
 
 
 def lcm(numbers):
@@ -74,7 +103,6 @@ def ord(i):
 
 
 def order(pi):
-    generator = 65537
     ord_pi = []
 
     # ordPi = ord_pi (65537)
@@ -114,23 +142,6 @@ def calcM(n):
         print('-----------M------------------')
         print(M)
     return M
-
-
-# TODO muss noch überarbeitet werden, damit pubkey übergeben werden kann und roca fingerprint ausgeführt werden kann.
-def call_fingerprint_tool():
-    # path = dir + 'roca_fingerprint/detect.py '
-    # subprocess.Popen(['python', path, pubkey], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # subprocess.run('python' + path + 'roca_fingerprint/detect.py ' + pubkey)
-
-    # if not os.path.exists(dir + "tmp.txt"):
-    #    open(dir + "tmp.txt", 'w+')
-
-    f = open(dir + "tmp.txt", 'r+')
-    c = f.readline()
-
-    print(c)
-
-    return c
 
 
 def get_param(key_size):
@@ -194,7 +205,6 @@ def greedy_heuristic(n, M, limes):
     pf_M = n
     M_old = M
     ord_new = ord_M
-    print(M)
     for j in pfo:
         count = 0
         for k in range(0, len(pfo)):
@@ -217,7 +227,7 @@ def greedy_heuristic(n, M, limes):
             pf_M_tmp = list(pf_M)
             M_new, pf_M_tmp = a2(M_old, pf_M_tmp, ord_new / p)  # Kandidat für M_strich
             # print("M NEW: " + str(M_new))
-            #print(pf_M)
+            # print(pf_M)
             div = choose_divisor(M_new, M_old, ord_new / p, ord_new)
 
             div_dict[p] = (div, M_new, pf_M_tmp)
@@ -227,21 +237,20 @@ def greedy_heuristic(n, M, limes):
 
         best_candidate = max(div_dict, key=div_dict.get)
         # print(best_candidate)
-        #print(div_dict)
+        # print(div_dict)
 
         ord_new /= best_candidate
         M_old = div_dict[best_candidate][1]
         pfo.remove(best_candidate)
         pf_M = div_dict[best_candidate][2]
-        #print(pf_M)
-        print("best candidate:" + str(best_candidate))
-        print("M Strich nach Runde %d: %d" % (runde, M_old))
-        print("ORD NEW: " + str(ord_new))
-        print("PRIME Factors: " + str(pfo))
-        runde += 1
-        print('\n')
+        if DEBUG:
+            print("best candidate:" + str(best_candidate))
+            print("M Strich nach Runde %d: %d" % (runde, M_old))
+            print("ORD NEW: " + str(ord_new))
+            print("PRIME Factors: " + str(pfo))
+            runde += 1
+            print('\n')
         return M_old, ord_new
-
 
 
 def get_m(n, limes):
@@ -259,5 +268,19 @@ if __name__ == "__main__":
 
         limes = math.log(pub_key.n, 2) / 4
         M_strich, ord_new = greedy_heuristic(n, M, limes)
+
+        cpuid = 1
+        threads = []
+        b = Mod(65537, M_strich)
+        c = discrete_log(pub_key.n, b)
+
+        print(pub_key.n)
+        for cpu in range(0, multiprocessing.cpu_count()):
+            thread = rocaCracker(cpuid, pub_key.n, M_strich, param['m'], param['t'], c, ord_new)
+            threads.append(thread)
+            cpuid += 1
+
+        for thread in threads:
+            thread.run()
 
     # roca(pub_key.n, M, param['m'], param['t'])
