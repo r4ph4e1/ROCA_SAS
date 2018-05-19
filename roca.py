@@ -9,7 +9,6 @@ import subprocess
 import os
 import binascii
 
-
 # Projekterzeichnis
 
 DEBUG = False
@@ -166,6 +165,7 @@ def prime_factors(n):
         primfac.append(n)
     return primfac
 
+
 # M, Primfaktoren von M und Kandidat für Ordnung
 def a2(M, pfo, ord_strich):
     M_strich = M
@@ -178,15 +178,20 @@ def a2(M, pfo, ord_strich):
 
     return M_strich, pfo
 
+
 def choose_divisor(M, Mold, ord, ordold):
-    #return 1
-    return (math.log(ordold, 2) - math.log(ord, 2)) / (math.log(Mold, 2) - math.log(M, 2))
+    try:
+        erg = (math.log(ordold, 2) - math.log(ord, 2)) / (math.log(Mold, 2) - math.log(M, 2))
+    except ZeroDivisionError:
+        erg = 0
+
+    return erg
+
 
 def greedy_heuristic(n, M, limes):
     ord_M = order(n)
     pfo = prime_factors(ord_M)
     pf_M = n
-
     M_old = M
     ord_new = ord_M
 
@@ -197,35 +202,46 @@ def greedy_heuristic(n, M, limes):
                 count += 1
                 pfo[k] = pow(j, count)
 
+    runde = 1
 
-    #while math.log(M_old, 2) > limes:
-    div_dict = {}
-    #print("Primfaktor von Kandidat M: " + str(pf_M))
-    #print("Primfaktor von Ordnung von M: " + str(pfo))
+    while math.log(M_old, 2) > limes:
 
-    #TODO Händisch verifizieren ob die Werte nach der ersten Runde passen.
+        div_dict = {}
+        removed = []
+        # print("Primfaktor von Kandidat M: " + str(pf_M))
+        # print("Primfaktor von Ordnung von M: " + str(pfo))
 
-    for p in reversed(pfo): # 53 ist in der Ordnung dabei und im Paper nicht, warum?
+        # TODO Händisch verifizieren ob die Werte nach der ersten Runde passen.
 
-        M_new, pf_M = a2(M_old, pf_M, ord_M/p) # Kandidat für M_strich
-        #print("M NEW: " + str(M_new))
-        if M_new == M_old:
-            div = 0
-        else:
-            div = choose_divisor(M_new, M_old, ord_M/p, ord_M)
+        for p in reversed(pfo):  # 53 ist in der Ordnung dabei und im Paper nicht, warum?
+            pf_M_tmp = list(pf_M)
+            M_new, pf_M_tmp = a2(M_old, pf_M_tmp, ord_new / p)  # Kandidat für M_strich
+            # print("M NEW: " + str(M_new))
+            print(pf_M)
+            div = choose_divisor(M_new, M_old, ord_new / p, ord_new)
 
-        div_dict[p] = div
-        #print("Div: " + str(div))
+            div_dict[p] = (div, M_new, pf_M_tmp)
+            # print("Div: " + str(div))
 
-        #print(div_dict)
+            # print(div_dict)
+
         best_candidate = max(div_dict, key=div_dict.get)
-        #print(best_candidate)
-        M_old /= best_candidate
+        # print(best_candidate)
+        #print(div_dict)
+
         ord_new /= best_candidate
+        M_old = div_dict[best_candidate][1]
         pfo.remove(best_candidate)
-        print("M Strich nach erster Runde: " + str(M_old))
+        pf_M = div_dict[best_candidate][2]
+        #print(pf_M)
+        print("best candidate:" + str(best_candidate))
+        print("M Strich nach Runde %d: %d" % (runde, M_old))
         print("ORD NEW: " + str(ord_new))
         print("PRIME Factors: " + str(pfo))
+        runde += 1
+        print('\n')
+
+
 
 def get_m(n, limes):
     M = calcM(n)
@@ -243,4 +259,4 @@ if __name__ == "__main__":
         limes = math.log(pub_key.n, 2) / 4
         greedy_heuristic(n, M, limes)
 
-    #roca(pub_key.n, M, param['m'], param['t'])
+    # roca(pub_key.n, M, param['m'], param['t'])
