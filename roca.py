@@ -194,7 +194,7 @@ def greedy_heuristic(n, M, limes):
     pf_M = n
     M_old = M
     ord_new = ord_M
-
+    print(M)
     for j in pfo:
         count = 0
         for k in range(0, len(pfo)):
@@ -217,7 +217,7 @@ def greedy_heuristic(n, M, limes):
             pf_M_tmp = list(pf_M)
             M_new, pf_M_tmp = a2(M_old, pf_M_tmp, ord_new / p)  # Kandidat für M_strich
             # print("M NEW: " + str(M_new))
-            print(pf_M)
+            #print(pf_M)
             div = choose_divisor(M_new, M_old, ord_new / p, ord_new)
 
             div_dict[p] = (div, M_new, pf_M_tmp)
@@ -240,6 +240,7 @@ def greedy_heuristic(n, M, limes):
         print("PRIME Factors: " + str(pfo))
         runde += 1
         print('\n')
+        return M_old, ord_new
 
 
 
@@ -257,6 +258,6 @@ if __name__ == "__main__":
         M = calcM(n)
 
         limes = math.log(pub_key.n, 2) / 4
-        greedy_heuristic(n, M, limes)
+        M_strich, ord_new = greedy_heuristic(n, M, limes)
 
     # roca(pub_key.n, M, param['m'], param['t'])
