@@ -95,8 +95,8 @@ def generate_vulnerable_key(keysize=1024):
     f.write(ascii_armored_key)
     f.close()
 
-    print(p)
-    print(q)
+    print(p*q)
+    #print(q)
 
     #print(check_output(['roca-detect', tmpfile]))
     #remove(tmpfile)

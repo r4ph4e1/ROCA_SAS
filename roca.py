@@ -1,11 +1,14 @@
+
 # coding: utf8
+import pdb
 from Crypto.PublicKey import RSA
 import threading
 import multiprocessing
 from fractions import gcd as gcd
 import math
+from multiprocessing import Process, Pool
 from sage.all_cmdline import *
-# from roca_fingerprint.detect import RocaFingerprinter
+#from roca_fingerprint.detect import RocaFingerprinter
 import itertools
 from functools import reduce
 import subprocess
@@ -26,57 +29,47 @@ Parameter:
 """
 
 
-class rocaCracker(threading.Thread):
-    def __init__(self, id, N, M, m, t, c, ord):
-        threading.Thread.__init__(self)
-        self.id = id
-        self.N = N
-        self.M = M
-        self.m = m
-        self.t = t
-        self.c = c
-        self.ord = ord
-        self.beta = 0.5
-        self.X = 2 * pow(N, self.beta) / M
-        self.start = self.get_start(c, ord, id)
-        self.end = self.get_end(c, ord, id)
+def get_end(c, ord, id):
+    start = int(c) / int(2)
+    end = (c + ord) / 2
+    count = end - start
+    cpus = multiprocessing.cpu_count()
+    div = floor(count / cpus)
+    return int(start + div * (id + 1) - 1)
 
-    def run(self):
-        #print "ID: %d, Start: %d, End: %d" % (self.id, self.start, self.end)
-        for a in list(IntegerRange(self.start, self.end)):
-            print(a)
-            #Todo: crack the shit
 
-    def get_end(self, c, ord, id):
-        start = c/2
-        end = (c + ord) /2
-        count = end - start
-        cpus = multiprocessing.cpu_count()
-        div = floor(count/cpus)
-        return start + div * (id + 1)-1
+def get_start(c, ord, id):
+    start = int(c) / int(2)
+    end = (c + ord) / 2
+    count = end - start
+    cpus = multiprocessing.cpu_count()
+    div = floor(count / cpus)
+    return int(start + div * id)
 
-    def get_start(self, c, ord, id):
-        start = c/2
-        end = (c + ord) /2
-        count = end - start
-        cpus = multiprocessing.cpu_count()
-        div = floor(count/cpus)
-        return start + div * id
 
-    def roca(N, M, m, t):
-        # N = p * q
-        # M = produkt der ersten n primzahlen
-        # m =
-        # t =
-        # M_strich =
-        p = 0
+def worker(args):
+    #{'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
+    id = args['cpu']
+    N = args['n']
+    M_strich = args['M_strich']
+    t = args['t']
+    c = args['c']
+    ord = args['ord_new']
+    m = args['m']
 
-        for a in range(c / 2, (c + ord) / 2):
-            # TODO k = Coppersmith(f(x), N, beta, m, t, X)
-            # TODO p = k * M + (65337^a mod M)
+    beta = 0.5
+    X = 2 * pow(N, beta) / M
+    start = get_start(c, ord, id)
+    end = get_end(c, ord, id)
 
-            if N % p == 0:
-                return p
+    print("id: %d, start: %d" % (id, start))
+    sleep(2)
+    print("id: %d, end: %d" % (id, end))
+    #for a in xrange(start, end):
+    #    print(a)
+
+
+    return
 
 
 def lcm(numbers):
@@ -258,6 +251,13 @@ def get_m(n, limes):
 
     greedy_heuristic(n, M, limes)
 
+def parm( n, M_strich, m, t, c, ord_new):
+    rest = multiprocessing.cpu_count()
+
+    while rest > 0:
+        yield {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
+        rest -= 1
+
 
 if __name__ == "__main__":
     with open('tmp.pub', 'r') as f:
@@ -269,18 +269,10 @@ if __name__ == "__main__":
         limes = math.log(pub_key.n, 2) / 4
         M_strich, ord_new = greedy_heuristic(n, M, limes)
 
-        cpuid = 1
         threads = []
         b = Mod(65537, M_strich)
         c = discrete_log(pub_key.n, b)
 
         print(pub_key.n)
-        for cpu in range(0, multiprocessing.cpu_count()):
-            thread = rocaCracker(cpuid, pub_key.n, M_strich, param['m'], param['t'], c, ord_new)
-            threads.append(thread)
-            cpuid += 1
-
-        for thread in threads:
-            thread.run()
-
-    # roca(pub_key.n, M, param['m'], param['t'])
+        p = Pool()
+        p.map(worker, parm(pub_key.n, M_strich,  param['m'], param['t'], c, ord_new))
