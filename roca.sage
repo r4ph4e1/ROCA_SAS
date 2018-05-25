@@ -50,26 +50,158 @@ def get_start(c, ord, id):
 def worker(args):
     #{'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
     id = args['cpu']
-    N = args['n']
+    pub_key = args['n']
     M_strich = args['M_strich']
     t = args['t']
     c = args['c']
     ord = args['ord_new']
     m = args['m']
+    n = pub_key.n
 
     beta = 0.5
-    X = 2 * pow(N, beta) / M
+    X = 2 * pow(n, beta) / M
     start = get_start(c, ord, id)
     end = get_end(c, ord, id)
+    ZmodN = Zmod(n)
 
-    print("id: %d, start: %d" % (id, start))
-    sleep(2)
-    print("id: %d, end: %d" % (id, end))
-    #for a in xrange(start, end):
-    #    print(a)
+    for a_strich in xrange(start, end):
+        R.<x> = PolynomialRing(ZmodN)
+
+        invers = inverse_mod(int(M_strich), n)
+        pol = (x + invers) * int(Integer(65537).powermod(a_strich, M_strich))
+        #if not pol.is_monic():
+            #pol = pol.irreducable_element(of_degree=pol.degree(x))
+        roots = coppersmith_howgrave_univariate(pol, n, beta, m, t, X)
+        for root in roots:
+            p = root*M_strich + int(Integer(65537).powermod(a_strich, M_strich))
+            if ZmodN(p) == 0:
+                print("Success p: %d " % p)
+                break
 
 
     return
+
+
+def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
+    """
+    Coppersmith revisited by Howgrave-Graham
+
+    finds a solution if:
+    * b|modulus, b >= modulus^beta , 0 < beta <= 1
+    * |x| < XX
+    """
+    #
+    # init
+    #
+    #dd = pol.degree()
+    dd = 1
+    nn = dd * mm + tt
+
+    #
+    # checks
+    #
+    if not 0 < beta <= 1:
+        raise ValueError("beta should belongs in (0, 1]")
+
+    if not pol.is_monic():
+        raise ArithmeticError("Polynomial must be monic.")
+
+    #
+    # calculate bounds and display them
+    #
+    """
+    * we want to find g(x) such that ||g(xX)|| <= b^m / sqrt(n)
+    * we know LLL will give us a short vector v such that:
+    ||v|| <= 2^((n - 1)/4) * det(L)^(1/n)
+    * we will use that vector as a coefficient vector for our g(x)
+
+    * so we want to satisfy:
+    2^((n - 1)/4) * det(L)^(1/n) < N^(beta*m) / sqrt(n)
+
+    so we can obtain ||v|| < N^(beta*m) / sqrt(n) <= b^m / sqrt(n)
+    (it's important to use N because we might not know b)
+    """
+    debug = False
+    if debug:
+        # t optimized?
+        print "\n# Optimized t?\n"
+        print "we want X^(n-1) < N^(beta*m) so that each vector is helpful"
+        cond1 = RR(XX ^ (nn - 1))
+        print "* X^(n-1) = ", cond1
+        cond2 = pow(modulus, beta * mm)
+        print "* N^(beta*m) = ", cond2
+        print "* X^(n-1) < N^(beta*m) \n-> GOOD" if cond1 < cond2 else "* X^(n-1) >= N^(beta*m) \n-> NOT GOOD"
+
+        # bound for X
+        print "\n# X bound respected?\n"
+        print "we want X <= N^(((2*beta*m)/(n-1)) - ((delta*m*(m+1))/(n*(n-1)))) / 2 = M"
+        print "* X =", XX
+        cond2 = RR(modulus ^ (((2 * beta * mm) / (nn - 1)) - ((dd * mm * (mm + 1)) / (nn * (nn - 1)))) / 2)
+        print "* M =", cond2
+        print "* X <= M \n-> GOOD" if XX <= cond2 else "* X > M \n-> NOT GOOD"
+
+        # solution possible?
+        print "\n# Solutions possible?\n"
+        detL = RR(modulus ^ (dd * mm * (mm + 1) / 2) * XX ^ (nn * (nn - 1) / 2))
+        print "we can find a solution if 2^((n - 1)/4) * det(L)^(1/n) < N^(beta*m) / sqrt(n)"
+        cond1 = RR(2 ^ ((nn - 1) / 4) * detL ^ (1 / nn))
+        print "* 2^((n - 1)/4) * det(L)^(1/n) = ", cond1
+        cond2 = RR(modulus ^ (beta * mm) / sqrt(nn))
+        print "* N^(beta*m) / sqrt(n) = ", cond2
+        print "* 2^((n - 1)/4) * det(L)^(1/n) < N^(beta*m) / sqrt(n) \n-> SOLUTION WILL BE FOUND" if cond1 < cond2 else "* 2^((n - 1)/4) * det(L)^(1/n) >= N^(beta*m) / sqroot(n) \n-> NO SOLUTIONS MIGHT BE FOUND (but we never know)"
+
+        # warning about X
+        print "\n# Note that no solutions will be found _for sure_ if you don't respect:\n* |root| < X \n* b >= modulus^beta\n"
+
+    #
+    # Coppersmith revisited algo for univariate
+    #
+
+    # change ring of pol and x
+    polZ = pol.change_ring(ZZ)
+    x = polZ.parent().gen()
+
+    # compute polynomials
+    gg = []
+    for ii in range(mm):
+        for jj in range(dd):
+            gg.append((x * XX) ** jj * modulus ** (mm - ii) * polZ(x * XX) ** ii)
+    for ii in range(tt):
+        gg.append((x * XX) ** ii * polZ(x * XX) ** mm)
+
+    # construct lattice B
+    BB = Matrix(ZZ, nn)
+
+    for ii in range(nn):
+        for jj in range(ii + 1):
+            BB[ii, jj] = gg[ii][jj]
+
+    # display basis matrix
+    #if debug:
+    #    matrix_overview(BB, modulus ^ mm)
+
+    # LLL
+    BB = BB.LLL()
+
+    # transform shortest vector in polynomial
+    new_pol = 0
+    for ii in range(nn):
+        new_pol += x ** ii * BB[0, ii] / XX ** ii
+
+    # factor polynomial
+    potential_roots = new_pol.roots()
+    #print "potential roots:", potential_roots
+
+    # test roots
+    roots = []
+    for root in potential_roots:
+        if root[0].is_integer():
+            result = polZ(ZZ(root[0]))
+            if gcd(modulus, result) >= modulus ^ beta:
+                roots.append(ZZ(root[0]))
+
+    #
+    return roots
 
 
 def lcm(numbers):
@@ -275,4 +407,6 @@ if __name__ == "__main__":
 
         print(pub_key.n)
         p = Pool()
-        p.map(worker, parm(pub_key.n, M_strich,  param['m'], param['t'], c, ord_new))
+        p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
+        #
+        worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
