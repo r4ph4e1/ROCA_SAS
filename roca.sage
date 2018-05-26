@@ -2,7 +2,7 @@
 # coding: utf8
 import pdb
 from Crypto.PublicKey import RSA
-import threading
+import time
 import multiprocessing
 from fractions import gcd as gcd
 import math
@@ -20,7 +20,7 @@ import binascii
 DEBUG = False
 
 dir = "/home/raphael/Desktop/ROCA_SAS/"
-
+start_time = time.time()
 """
 Parameter:
     N = p * q
@@ -68,13 +68,13 @@ def worker(args):
         R.<x> = PolynomialRing(ZmodN)
 
         invers = inverse_mod(int(M_strich), n)
-        pol = (x + invers) * int(Integer(65537).powermod(a_strich, M_strich))
-        #if not pol.is_monic():
-            #pol = pol.irreducable_element(of_degree=pol.degree(x))
+        pol = x + invers * int(Integer(65537).powermod(a_strich, M_strich))
+
         roots = coppersmith_howgrave_univariate(pol, n, beta, m, t, X)
         for root in roots:
             p = root*M_strich + int(Integer(65537).powermod(a_strich, M_strich))
-            if ZmodN(p) == 0:
+            if Mod(n, p) == 0:
+                print("--- %s seconds ---" % (time.time() - start_time))
                 print("Success p: %d " % p)
                 break
 
@@ -394,7 +394,10 @@ def parm( n, M_strich, m, t, c, ord_new):
 if __name__ == "__main__":
     with open('tmp.pub', 'r') as f:
         pub_key = RSA.importKey(f.read())
+
+        print "Start Zeit: %f" % start_time
         param = get_param(pub_key.size())
+
         n = get_primes(param['anz'])
         M = calcM(n)
 
@@ -405,8 +408,9 @@ if __name__ == "__main__":
         b = Mod(65537, M_strich)
         c = discrete_log(pub_key.n, b)
 
-        print(pub_key.n)
+        #print(pub_key.n)
         p = Pool()
-        p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
-        #
+        #p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
+
+
         worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
