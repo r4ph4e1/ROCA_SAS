@@ -28,7 +28,6 @@ Parameter:
     m und t = Optimierungs Parameter fuer Coppersmith
 """
 
-
 def get_end(c, ord, id):
     start = int(c) / int(2)
     end = (c + ord) / 2
@@ -310,11 +309,15 @@ def prime_factors(n):
 
 # M, Primfaktoren von M und Kandidat für Ordnung
 def a2(M, pfo, ord_strich):
+    #M_strich = ZZ(M)
     M_strich = M
-
+    print(pfo)
     for p in reversed(pfo):
         # ord_pi teilt nicht ord_strich
+        #print("Ord_strich in A2: %d" % ord_strich)
+        #print("Ordnung von %d in A2: %d" % (p, ord(p)))
         if ord_strich % ord(p) != 0:
+
             M_strich /= p
             pfo.remove(p)
 
@@ -331,11 +334,15 @@ def choose_divisor(M, Mold, ord, ordold):
 
 
 def greedy_heuristic(n, M, limes):
+    DEBUG = True
+
     ord_M = order(n)
-    pfo = prime_factors(ord_M)
-    pf_M = n
+    pfo = prime_factors(ord_M) # Ordnung der einzelnen Primfaktoren der Ordnung M
+    pf_M = n # Primfaktoren von M
     M_old = M
     ord_new = ord_M
+
+    # Fügt die Potenzen der Primfaktoren hinzu zB 2⁴, 3⁴, etc.
     for j in pfo:
         count = 0
         for k in range(0, len(pfo)):
@@ -352,9 +359,9 @@ def greedy_heuristic(n, M, limes):
         # print("Primfaktor von Kandidat M: " + str(pf_M))
         # print("Primfaktor von Ordnung von M: " + str(pfo))
 
-        # TODO Händisch verifizieren ob die Werte nach der ersten Runde passen.
-
-        for p in reversed(pfo):  # 53 ist in der Ordnung dabei und im Paper nicht, warum?
+        # Iteriert durch alle Ordnungen der Primfaktoren von der Ordnung von M
+        # Berechnet alle möglichen M_Strichs für die auswahl des besten Kandidaten für M_Strich
+        for p in reversed(pfo):
             pf_M_tmp = list(pf_M)
             M_new, pf_M_tmp = a2(M_old, pf_M_tmp, ord_new / p)  # Kandidat für M_strich
             # print("M NEW: " + str(M_new))
@@ -379,9 +386,11 @@ def greedy_heuristic(n, M, limes):
             print("M Strich nach Runde %d: %d" % (runde, M_old))
             print("ORD NEW: " + str(ord_new))
             print("PRIME Factors: " + str(pfo))
+            print("Bitlength of M_strich %d" % int(M_old).bit_length())
             runde += 1
             print('\n')
-        return M_old, ord_new
+
+    return M_old, ord_new
 
 
 def get_m(n, limes):
@@ -396,6 +405,15 @@ def parm( n, M_strich, m, t, c, ord_new):
         yield {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
         rest -= 1
 
+def fingerprint(M, n):
+    try:
+        b = Mod(65537, M)
+        c = discrete_log(n, b)
+        print("The Key is vulnerable to ROCA!")
+        return 1
+    except ValueError:
+        print("The Key is resistant to ROCA!")
+        return 0
 
 if __name__ == "__main__":
     with open('tmp.pub', 'r') as f:
@@ -407,16 +425,22 @@ if __name__ == "__main__":
         n = get_primes(param['anz'])
         M = calcM(n)
 
-        limes = math.log(pub_key.n, 2) / 4
-        M_strich, ord_new = greedy_heuristic(n, M, limes)
+        # Checks if PubKey is Vulnerable to ROCA
+        if fingerprint(M, pub_key.n) == 1:
+            limes = math.log(pub_key.n, 2) / 4
 
-        threads = []
-        b = Mod(65537, M_strich)
-        c = discrete_log(pub_key.n, b)
+            M_strich, ord_new = greedy_heuristic(n, M, limes)
+            print("Bitlength of M %d" %int(M).bit_length())
+            print("Bitlength of M_strich %d" % int(M_strich).bit_length())
 
-        #print(pub_key.n)
-        p = Pool()
-        #p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
+            threads = []
+            b = Mod(65537, M_strich)
+            c = discrete_log(pub_key.n, b)
+        else:
+            print("Resistant Key: Terminating execution!")
 
+            #print(pub_key.n)
+            #p = Pool()
+            #p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
 
-        worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
+            #worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
