@@ -64,6 +64,9 @@ def worker(args):
     end = get_end(c, ord, id)
     ZmodN = Zmod(n)
 
+    first = True
+    print("Trys per core: %d" % (end - start))
+
     for a_strich in xrange(start, end):
         R.<x> = PolynomialRing(ZmodN)
 
@@ -76,7 +79,10 @@ def worker(args):
             if Mod(n, p) == 0:
                 print("--- %s seconds ---" % (time.time() - start_time))
                 print("Success p: %d " % p)
-                break
+                break #Todo: break gilt nur für die innere Schleife - Beenden aller threads
+        if first:
+            print("Time per attempt %d seconds." % (time.time()-start_time))
+            first = False
 
 
     return
@@ -395,7 +401,7 @@ if __name__ == "__main__":
     with open('tmp.pub', 'r') as f:
         pub_key = RSA.importKey(f.read())
 
-        print "Start Zeit: %f" % start_time
+        #print "Start Zeit: %f" % start_time
         param = get_param(pub_key.size())
 
         n = get_primes(param['anz'])
