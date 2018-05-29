@@ -363,7 +363,7 @@ def greedy_heuristic(n, M, limes):
         # Berechnet alle möglichen M_Strichs für die auswahl des besten Kandidaten für M_Strich
         for p in reversed(pfo):
             pf_M_tmp = list(pf_M)
-            M_new, pf_M_tmp = a2(M_old, pf_M_tmp, ord_new / p)  # Kandidat für M_strich
+            M_new, pf_M_tmp = a2(M_old, pf_M_tmp, int(ord_new / p))  # Kandidat für M_strich
             # print("M NEW: " + str(M_new))
             # print(pf_M)
             div = choose_divisor(M_new, M_old, ord_new / p, ord_new)
