@@ -303,11 +303,15 @@ def prime_factors(n):
 
 # M, Primfaktoren von M und Kandidat für Ordnung
 def a2(M, pfo, ord_strich):
+    #M_strich = ZZ(M)
     M_strich = M
-
+    print(pfo)
     for p in reversed(pfo):
         # ord_pi teilt nicht ord_strich
+        #print("Ord_strich in A2: %d" % ord_strich)
+        #print("Ordnung von %d in A2: %d" % (p, ord(p)))
         if ord_strich % ord(p) != 0:
+
             M_strich /= p
             pfo.remove(p)
 
@@ -327,7 +331,7 @@ def greedy_heuristic(n, M, limes):
     DEBUG = True
 
     ord_M = order(n)
-    pfo = prime_factors(ord_M) # Ordnung der einzelnen Primfaktoren
+    pfo = prime_factors(ord_M) # Ordnung der einzelnen Primfaktoren der Ordnung M
     pf_M = n # Primfaktoren von M
     M_old = M
     ord_new = ord_M
@@ -349,9 +353,9 @@ def greedy_heuristic(n, M, limes):
         # print("Primfaktor von Kandidat M: " + str(pf_M))
         # print("Primfaktor von Ordnung von M: " + str(pfo))
 
-        # TODO Händisch verifizieren ob die Werte nach der ersten Runde passen.
-
-        for p in reversed(pfo):  # 53 ist in der Ordnung dabei und im Paper nicht, warum?
+        # Iteriert durch alle Ordnungen der Primfaktoren von der Ordnung von M
+        # Berechnet alle möglichen M_Strichs für die auswahl des besten Kandidaten für M_Strich
+        for p in reversed(pfo):
             pf_M_tmp = list(pf_M)
             M_new, pf_M_tmp = a2(M_old, pf_M_tmp, ord_new / p)  # Kandidat für M_strich
             # print("M NEW: " + str(M_new))
@@ -379,6 +383,7 @@ def greedy_heuristic(n, M, limes):
             print("Bitlength of M_strich %d" % int(M_old).bit_length())
             runde += 1
             print('\n')
+
     return M_old, ord_new
 
 
