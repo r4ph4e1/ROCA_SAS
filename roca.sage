@@ -47,9 +47,11 @@ def get_start(c, ord, id):
 
 
 def worker(args):
+    root_count = 0
+    global root_count
     # {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
     id = args['cpu']
-    N = args['N']
+    N = Integer(args['n'])
     M_strich = args['M_strich']
     t = args['t']
     c = args['c']
@@ -57,18 +59,12 @@ def worker(args):
     m = args['m']
 
     beta = 0.5
-    X = 2 * pow(N, beta) / M_strich
+    X = ceil(2 * pow(N, beta) / M_strich)
 
     start = get_start(c, ord, id)
     end = get_end(c, ord, id)
     ZmodN = Zmod(N)
 
-    print(end - start)
-
-    print((c + ord)/2 - c/2)
-    start = c/2
-    end = (c + ord)/2
-    #tmp = []
 
     for a_strich in xrange(start, end):
         R.<x> = PolynomialRing(ZmodN)
@@ -78,7 +74,7 @@ def worker(args):
 
         #print("Pol: %s, N: %d, beta: %f, m: %d, t: %d, X: %f" % (str(pol), N, beta, m, t, X))
         roots = coppersmith_howgrave_univariate(pol, N, beta, m, t, X)
-        print(roots)
+        root_count += len(roots)
         #tmp.append(roots)
 
         for root in roots:
@@ -87,11 +83,12 @@ def worker(args):
                 print("--- %s seconds ---" % (time.time() - start_time))
                 print("Success p: %d " % p)
                 break  # Todo: break gilt nur für die innere Schleife - Beenden aller threads
-    #print(tmp)
+    print(root_count)
     return
 
 
 def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
+    #pdb.set_trace()
     """
     Coppersmith revisited by Howgrave-Graham
 
@@ -103,7 +100,6 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
     # init
     #
     dd = pol.degree()
-    #dd = 1
     nn = dd * mm + tt
 
     #
@@ -198,18 +194,22 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
         new_pol += x ** ii * BB[0, ii] / XX ** ii
 
     # factor polynomial
-    potential_roots = new_pol.roots()
+    potential_roots = new_pol.roots(ring=ZZ)
     #print("potential roots:", potential_roots)
 
     # test roots
     roots = []
     for root in potential_roots:
-        if root[0].is_integer() or True:
+        #r = [Integer(int(root[0]))]
+        #print(r)
+        if root[0].is_integer():
+
             result = polZ(ZZ(root[0]))
             print("GCD: %d, Modulus hoch Beta: %d" % (gcd(modulus, result), modulus^beta))
             if gcd(modulus, result) >= modulus ^ beta:
                 roots.append(ZZ(root[0]))
-
+        #else:
+            #print(root[0])
     return roots
 
 
@@ -399,12 +399,6 @@ def greedy_heuristic(n, M, limes):
     return M_old, ord_new
 
 
-def get_m(n, limes):
-    M = calcM(n)
-
-    greedy_heuristic(n, M, limes)
-
-
 def parm(n, M_strich, m, t, c, ord_new):
     rest = multiprocessing.cpu_count()
 
@@ -425,7 +419,7 @@ def fingerprint(M, n):
 
 
 if __name__ == "__main__":
-    with open('tmp.pub', 'r') as f:
+    with open('tmp.pub2', 'r') as f:
         pub_key = RSA.importKey(f.read())
 
         # print "Start Zeit: %f" % start_time
@@ -445,9 +439,9 @@ if __name__ == "__main__":
             threads = []
             b = Mod(65537, M_strich)
             c = discrete_log(pub_key.n, b)
-            worker({'cpu': 0, 'N': pub_key.n, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
-            #p = Pool()
-            #p.map(worker, parm(pub_key, M_strich, param['m'], param['t'], c, ord_new))
+            #worker({'cpu': 0, 'N': pub_key.n, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
+            p = Pool()
+            p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new))
         else:
             print("Resistant Key: Terminating execution!")
 
