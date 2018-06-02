@@ -19,7 +19,10 @@ import unittest
 class TestImplementation(unittest.TestCase):
 
     def test_lcm(self):
-        pass
+        self.assertEqual(lcm(3,4), 12)
+        self.assertEqual(lcm(1423,231499233), 329423408559)
+        self.assertEqual(lcm(329423408559, 471), 51719475143763)
+        self.assertEqual(lcm(51719475143763, 231499233), 51719475143763)
 
     def test_ord(self):
         pass
