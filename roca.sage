@@ -104,20 +104,36 @@ class TestImplementation(unittest.TestCase):
 
         self.assertEqual(get_primes(n), reference)
 
-    #def test_prime_factors(self):
-    #    num = 126
-    #    reference = [2, 3, 3, 7]
-    #    self.assertEqual(prime_factors(num), reference)
+    def test_prime_factors(self):
+        num = 126
+        reference = [2, 3, 3, 7]
+        self.assertEqual(prime_factors(num), reference)
 
-    '''
-    def test_split(self):
-        s = 'hello world'
-        self.assertEqual(s.split(), ['hello', 'world'])
-        # check that s.split fails when the separator is not a string
-        with self.assertRaises(TypeError):
-            s.split(2)
 
-    '''
+    def test_a2(self):
+        M = 962947420735983927056946215901134429196419130606213075415963491270
+        ord_new = 2454106387091158800 / 83
+        n = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
+        53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
+        131, 137, 139, 149, 151, 157, 163, 167]
+
+
+
+        M_new = 962947420735983927056946215901134429196419130606213075415963491270 / 167
+        pf_M = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
+        61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
+        139, 149, 151, 157, 163]
+
+
+        self.assertEqual(a2(M, n, ord_new), (M_new, pf_M))
+
+
+    def test_choose_divisor(self):
+        reference = 0.863393112566
+
+        self.assertEqual(round(choose_divisor(5766152219975951659023630035336134306565384015606066319856068810, 962947420735983927056946215901134429196419130606213075415963491270, 29567546832423600, 2454106387091158800), 12), reference)
+
+
 
 DEBUG = False
 
@@ -559,5 +575,3 @@ if __name__ == "__main__":
             # p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
 
             # worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
-
-
