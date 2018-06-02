@@ -19,16 +19,20 @@ import unittest
 class TestImplementation(unittest.TestCase):
 
     def test_lcm(self):
-        self.assertEqual(lcm(3,4), 12)
-        self.assertEqual(lcm(1423,231499233), 329423408559)
-        self.assertEqual(lcm(329423408559, 471), 51719475143763)
-        self.assertEqual(lcm(51719475143763, 231499233), 51719475143763)
+        self.assertEqual(lcm([3,4]), 12)
+        self.assertEqual(lcm([1423,231499233]), 329423408559)
+        self.assertEqual(lcm([329423408559, 471]), 51719475143763)
+        self.assertEqual(lcm([51719475143763, 231499233]), 51719475143763)
 
     def test_ord(self):
-        pass
+        self.assertEqual(ord(3), 2)
+        self.assertEqual(ord(1423), 1422)
+        self.assertEqual(ord(329), 138)
+        self.assertEqual(ord(331), 2)
 
     def test_order(self):
         pass
+        #self.assertEqual(order([5,7,11]), 385)
 
     def test_CalcM(self):
         pass
@@ -317,12 +321,12 @@ def lcm(numbers):
 
 def ord(i):
     generator = 65537
-    ord_pi = []
+    #ord_pi = []
 
     for j in range(1, i):
         # print(str(j))
         if generator ** j % i == 1:
-            ord_pi.append(j)
+            #ord_pi.append(j)
             # print("order " + str(i) + " (65537) = " + str(j))
             return j
         else:
