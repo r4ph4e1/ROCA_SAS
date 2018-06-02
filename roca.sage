@@ -31,8 +31,10 @@ class TestImplementation(unittest.TestCase):
         self.assertEqual(ord(331), 2)
 
     def test_order(self):
-        pass
-        #self.assertEqual(order([5,7,11]), 385)
+        self.assertEqual(order([5,7,11]), lcm([ord(5), ord(7), ord(11)]))
+        self.assertEqual(order([3, 5, 7, 11]), lcm([ord(3),ord(5), ord(7), ord(11)]))
+        self.assertEqual(order([73, 97, 101]), lcm([ord(73), ord(97), ord(101)]))
+        self.assertEqual(order([151, 97, 163]), lcm([ord(163), ord(97), ord(151)]))
 
     def test_CalcM(self):
         pass
@@ -528,7 +530,7 @@ if __name__ == "__main__":
 
         unittest.main()
 
-        '''
+
         M = calcM(n)
         #print("test: %d" % 7.42527440660050e39)
         # Checks if PubKey is Vulnerable to ROCA
@@ -554,4 +556,4 @@ if __name__ == "__main__":
 
             # worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
 
-        '''
+
