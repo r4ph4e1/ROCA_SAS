@@ -18,6 +18,35 @@ import unittest
 
 class TestImplementation(unittest.TestCase):
 
+    def test_lcm(self):
+        pass
+
+    def test_ord(self):
+        pass
+
+    def test_order(self):
+        pass
+
+    def test_CalcM(self):
+        pass
+
+    def test_get_Param(self):
+        param512 = get_param(512)
+        param1024 = get_param(1024)
+        param2048 = get_param(2048)
+        self.assertEqual(param512['anz'], 39)
+        self.assertEqual(param1024['anz'], 71)
+        self.assertEqual(param2048['anz'], 126)
+
+        self.assertEqual(param512['m'], 5)
+        self.assertEqual(param1024['m'], 4)
+        self.assertEqual(param2048['m'], 6)
+
+        self.assertEqual(param512['t'], 6)
+        self.assertEqual(param1024['t'], 5)
+        self.assertEqual(param2048['t'], 7)
+
+
     def test_get_primes(self):
         num_primes = [39, 71, 126, 225]
         for n in num_primes:
