@@ -95,8 +95,10 @@ class TestImplementation(unittest.TestCase):
                 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237,
                 1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307,
                 1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427]
-
-        self.assertEqual(get_primes(n), reference)
+        erg = []
+        for p in get_primes(n):
+            erg.append(p)
+        self.assertEqual(erg, reference)
 
     def test_prime_factors(self):
         num = 126
@@ -352,23 +354,12 @@ def order(pi):
         print ord_m
     return ord_m
 
-
 def get_primes(x):
-    i = 0
-    n = [2]
-
-    while len(n) < x:
-        i += 1
-        for j in range(2, i):
-            if math.fmod(i, j) != 0:
-                if j == i - 1:
-                    n.append(i)
-            else:
-                break
-    if DEBUG:
-        print "First n primes: "
-        print(n)
-    return n
+    P = Primes()
+    erg  = []
+    for i in range(x):
+        erg.append(P.unrank(i))
+    return erg
 
 
 def calcM(n):
@@ -462,7 +453,8 @@ def greedy_heuristic(n, M, limes):
 
     runde = 1
 
-    while math.log(M_old, 2) > limes:
+
+    while True:
 
         div_dict = {}
         removed = []
@@ -488,15 +480,26 @@ def greedy_heuristic(n, M, limes):
         # print(div_dict)
 
         ord_new /= best_candidate
+        limes = 141
+        if not log(div_dict[best_candidate][1], 2) > limes:
+            if DEBUG:
+                print(M_old)
+                print(div_dict[best_candidate][1])
+            break
+
         M_old = div_dict[best_candidate][1]
         pfo.remove(best_candidate)
         pf_M = div_dict[best_candidate][2]
+
+
         if DEBUG:
-            print("best candidate:" + str(best_candidate))
-            print("M Strich nach Runde %d: %d" % (runde, M_old))
-            print("ORD NEW: " + str(ord_new))
-            print("PRIME Factors: " + str(pfo))
-            print("Bitlength of M_strich %d" % int(M_old).bit_length())
+            #print("best candidate:" + str(best_candidate))
+            #print("M Strich nach Runde %d: %d" % (runde, M_old))
+            #print("ORD NEW: " + str(ord_new))
+            #print("PRIME Factors: " + str(pfo))
+            print("Log von N zur basis 2: %d" % limes)
+            print("Log M_Strich zur basis 2: %d" % (log(M_old, 2)))
+            print("Bitlength of M_strich %d nach Runde %d" % (int(M_old).bit_length(), runde))
             runde += 1
             print('\n')
 
@@ -523,7 +526,7 @@ def fingerprint(M, n):
 
 
 if __name__ == "__main__":
-    with open('tmp.pub2', 'r') as f:
+    with open('512.pub', 'r') as f:
         pub_key = RSA.importKey(f.read())
 
         print pub_key.size()
@@ -531,8 +534,7 @@ if __name__ == "__main__":
         param = get_param(pub_key.size())
 
         n = get_primes(param['anz'])
-
-        #unittest.main()
+        unittest.main()
 
 
         M = calcM(n)
@@ -544,11 +546,13 @@ if __name__ == "__main__":
             M_strich, ord_new = greedy_heuristic(n, M, limes)
             print("Bitlength of M %d" % int(M).bit_length())
             print("Bitlength of M_strich %d" % int(M_strich).bit_length())
+            print("Neue Ordnung M_strich: %d" % ord_new)
+            #print("Ordnung von M: %d" % order(n))
 
             threads = []
             b = Mod(65537, M_strich)
             c = discrete_log(pub_key.n, b)
-            #worker({'cpu': 0, 'N': pub_key.n, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
+            #worker({'cpu': 0, 'n': pub_key.n, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
             p = Pool()
             p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new))
         else:

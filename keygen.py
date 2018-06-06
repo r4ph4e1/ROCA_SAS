@@ -89,7 +89,7 @@ def generate_vulnerable_key(keysize=1024):
     print(ascii_armored_key)
 
     # run it against the roca-detect check utility
-    tmpfile = 'tmp.pub2'
+    tmpfile = '512.pub'
     f = open(tmpfile, 'w')
 
     f.write(ascii_armored_key)
