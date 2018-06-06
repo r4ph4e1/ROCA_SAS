@@ -162,9 +162,6 @@ def get_start(c, ord, id):
 
 
 def worker(args):
-    root_count = 0
-    global root_count
-    # {'cpu': rest, 'n': n, 'M_strich': M_strich,'m': m, 't': t, 'c': c, 'ord_new': ord_new}
     id = args['cpu']
     N = Integer(args['n'])
     M_strich = args['M_strich']
@@ -189,16 +186,16 @@ def worker(args):
 
         #print("Pol: %s, N: %d, beta: %f, m: %d, t: %d, X: %f" % (str(pol), N, beta, m, t, X))
         roots = coppersmith_howgrave_univariate(pol, N, beta, m, t, X)
-        root_count += len(roots)
         #tmp.append(roots)
 
         for root in roots:
             p = root * M_strich + int(Integer(65537).powermod(a_strich, M_strich))
             if N % p == 0:
+                print("--- Success!!!! ---")
                 print("--- %s seconds ---" % (time.time() - start_time))
-                print("Success p: %d " % p)
-                break  # Todo: break gilt nur für die innere Schleife - Beenden aller threads
-    print(root_count)
+                print("p: %d " % p)
+                print("q: %d " % (c-p))
+                exit(0)  # Todo: break gilt nur für die innere Schleife - Beenden aller threads
     return
 
 
@@ -534,7 +531,7 @@ if __name__ == "__main__":
         param = get_param(pub_key.size())
 
         n = get_primes(param['anz'])
-        unittest.main()
+        #unittest.main()
 
 
         M = calcM(n)
@@ -544,10 +541,11 @@ if __name__ == "__main__":
             limes = math.log(pub_key.n, 2) / 4
 
             M_strich, ord_new = greedy_heuristic(n, M, limes)
-            print("Bitlength of M %d" % int(M).bit_length())
-            print("Bitlength of M_strich %d" % int(M_strich).bit_length())
-            print("Neue Ordnung M_strich: %d" % ord_new)
-            #print("Ordnung von M: %d" % order(n))
+            if DEBUG:
+                print("Bitlength of M %d" % int(M).bit_length())
+                print("Bitlength of M_strich %d" % int(M_strich).bit_length())
+                print("Neue Ordnung M_strich: %d" % ord_new)
+                print("Ordnung von M: %d" % order(n))
 
             threads = []
             b = Mod(65537, M_strich)
@@ -557,9 +555,3 @@ if __name__ == "__main__":
             p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new))
         else:
             print("Resistant Key: Terminating execution!")
-
-            # print(pub_key.n)
-            # p = Pool()
-            # p.map(worker, parm(pub_key, M_strich,  param['m'], param['t'], c, ord_new))
-
-            # worker({'cpu': 0, 'n': pub_key, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
