@@ -105,4 +105,4 @@ def generate_vulnerable_key(keysize=1024):
 
 
 if __name__ == '__main__':
-    generate_vulnerable_key(1024)
+    generate_vulnerable_key(514)

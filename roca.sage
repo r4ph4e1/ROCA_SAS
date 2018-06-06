@@ -18,12 +18,6 @@ import unittest
 
 class TestImplementation(unittest.TestCase):
 
-    def test_lcm(self):
-        self.assertEqual(lcm([3,4]), 12)
-        self.assertEqual(lcm([1423,231499233]), 329423408559)
-        self.assertEqual(lcm([329423408559, 471]), 51719475143763)
-        self.assertEqual(lcm([51719475143763, 231499233]), 51719475143763)
-
     def test_ord(self):
         self.assertEqual(ord(3), 2)
         self.assertEqual(ord(1423), 1422)
@@ -313,7 +307,7 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
         new_pol += x ** ii * BB[0, ii] / XX ** ii
 
     # factor polynomial
-    potential_roots = new_pol.roots(ring=ZZ)
+    potential_roots = new_pol.roots()
     #print("potential roots:", potential_roots)
 
     # test roots
@@ -330,15 +324,6 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
         #else:
             #print(root[0])
     return roots
-
-
-def lcm(numbers):
-    lcm = numbers[0]
-    for i in numbers[1:]:
-        # print(i)
-        lcm = int(lcm * i / gcd(lcm, i))
-
-    return lcm
 
 
 def ord(i):
@@ -461,8 +446,6 @@ def choose_divisor(M, Mold, ord, ordold):
 
 
 def greedy_heuristic(n, M, limes):
-    DEBUG = True
-
     ord_M = order(n)
     pfo = prime_factors(ord_M)  # Ordnung der einzelnen Primfaktoren der Ordnung M
     pf_M = n  # Primfaktoren von M
@@ -543,12 +526,13 @@ if __name__ == "__main__":
     with open('tmp.pub2', 'r') as f:
         pub_key = RSA.importKey(f.read())
 
+        print pub_key.size()
         # print "Start Zeit: %f" % start_time
         param = get_param(pub_key.size())
 
         n = get_primes(param['anz'])
 
-        unittest.main()
+        #unittest.main()
 
 
         M = calcM(n)
