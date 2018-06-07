@@ -9,6 +9,7 @@ from sage.all_cmdline import *
 import unittest
 import progressbar
 
+
 class TestImplementation(unittest.TestCase):
 
     def test_ord(self):
@@ -18,8 +19,8 @@ class TestImplementation(unittest.TestCase):
         self.assertEqual(ord(331), 2)
 
     def test_order(self):
-        self.assertEqual(order([5,7,11]), lcm([ord(5), ord(7), ord(11)]))
-        self.assertEqual(order([3, 5, 7, 11]), lcm([ord(3),ord(5), ord(7), ord(11)]))
+        self.assertEqual(order([5, 7, 11]), lcm([ord(5), ord(7), ord(11)]))
+        self.assertEqual(order([3, 5, 7, 11]), lcm([ord(3), ord(5), ord(7), ord(11)]))
         self.assertEqual(order([73, 97, 101]), lcm([ord(73), ord(97), ord(101)]))
         self.assertEqual(order([151, 97, 163]), lcm([ord(163), ord(97), ord(151)]))
 
@@ -28,7 +29,8 @@ class TestImplementation(unittest.TestCase):
         self.assertEqual(calcM(get_primes(17)), 1922760350154212639070)
         self.assertEqual(calcM(get_primes(11)), 200560490130)
         self.assertEqual(calcM(get_primes(39)), 962947420735983927056946215901134429196419130606213075415963491270)
-        self.assertEqual(calcM(get_primes(225)), 476298360135403827647694455135540816872519553549434458452846518961225116628296331399988870173121220163740886622806757743417410016369560917503559802728927524348613100806519956368338676760941104305001080979323085946578890537415191372500790547035255053448294510903517632483050316251051922824918501207944180748924570584954958405734358577378608781593419480418233727143405369379364772277980023160119485272194113567058285570751863313298410604353830525661335472172800368148779192235876130866530676559044032444122691571891815741607453068540512153426085458681458456535671760914797231872574004919368930)
+        self.assertEqual(calcM(get_primes(225)),
+                         476298360135403827647694455135540816872519553549434458452846518961225116628296331399988870173121220163740886622806757743417410016369560917503559802728927524348613100806519956368338676760941104305001080979323085946578890537415191372500790547035255053448294510903517632483050316251051922824918501207944180748924570584954958405734358577378608781593419480418233727143405369379364772277980023160119485272194113567058285570751863313298410604353830525661335472172800368148779192235876130866530676559044032444122691571891815741607453068540512153426085458681458456535671760914797231872574004919368930)
 
     def test_get_Param(self):
         param512 = get_param(512)
@@ -46,48 +48,47 @@ class TestImplementation(unittest.TestCase):
         self.assertEqual(param1024['t'], 5)
         self.assertEqual(param2048['t'], 7)
 
-
     def test_get_primes(self):
         num_primes = [39, 71, 126, 225]
         for n in num_primes:
             if n == 39:
                 reference = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-                53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
-                131, 137, 139, 149, 151, 157, 163, 167]
+                             53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
+                             131, 137, 139, 149, 151, 157, 163, 167]
             elif n == 71:
                 reference = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-                53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
-                131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
-                199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
-                281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353]
+                             53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
+                             131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
+                             199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
+                             281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353]
             elif n == 126:
                 reference = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-                53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
-                131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
-                199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
-                281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
-                373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449,
-                457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547,
-                557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631,
-                641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701]
+                             53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
+                             131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
+                             199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
+                             281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
+                             373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449,
+                             457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547,
+                             557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631,
+                             641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701]
             elif n == 225:
                 reference = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-                53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
-                131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
-                199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
-                281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
-                373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449,
-                457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547,
-                557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631,
-                641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727,
-                733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823,
-                827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919,
-                929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009, 1013,
-                1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087,
-                1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163,
-                1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237,
-                1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307,
-                1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427]
+                             53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
+                             131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
+                             199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277,
+                             281, 283, 293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367,
+                             373, 379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449,
+                             457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521, 523, 541, 547,
+                             557, 563, 569, 571, 577, 587, 593, 599, 601, 607, 613, 617, 619, 631,
+                             641, 643, 647, 653, 659, 661, 673, 677, 683, 691, 701, 709, 719, 727,
+                             733, 739, 743, 751, 757, 761, 769, 773, 787, 797, 809, 811, 821, 823,
+                             827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919,
+                             929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009, 1013,
+                             1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 1087,
+                             1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 1153, 1163,
+                             1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223, 1229, 1231, 1237,
+                             1249, 1259, 1277, 1279, 1283, 1289, 1291, 1297, 1301, 1303, 1307,
+                             1319, 1321, 1327, 1361, 1367, 1373, 1381, 1399, 1409, 1423, 1427]
         erg = []
         for p in get_primes(n):
             erg.append(p)
@@ -98,29 +99,27 @@ class TestImplementation(unittest.TestCase):
         reference = [2, 3, 3, 7]
         self.assertEqual(prime_factors(num), reference)
 
-
     def test_a2(self):
         M = 962947420735983927056946215901134429196419130606213075415963491270
         ord_new = 2454106387091158800 / 83
         n = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-        53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
-        131, 137, 139, 149, 151, 157, 163, 167]
-
-
+             53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127,
+             131, 137, 139, 149, 151, 157, 163, 167]
 
         M_new = 962947420735983927056946215901134429196419130606213075415963491270 / 167
         pf_M = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
-        61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
-        139, 149, 151, 157, 163]
-
+                61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
+                139, 149, 151, 157, 163]
 
         self.assertEqual(a2(M, n, ord_new), (M_new, pf_M))
-
 
     def test_choose_divisor(self):
         reference = 0.863393112566
 
-        self.assertEqual(round(choose_divisor(5766152219975951659023630035336134306565384015606066319856068810, 962947420735983927056946215901134429196419130606213075415963491270, 29567546832423600, 2454106387091158800), 12), reference)
+        self.assertEqual(round(choose_divisor(5766152219975951659023630035336134306565384015606066319856068810,
+                                              962947420735983927056946215901134429196419130606213075415963491270,
+                                              29567546832423600, 2454106387091158800), 12), reference)
+
 
 TEST = False
 DEBUG = False
@@ -193,13 +192,13 @@ def worker(args):
                 print("--- %s seconds ---" % (time.time() - start_time))
                 p = long(p)
                 print("p: %d " % p)
-                q = long(N/p)
+                q = long(N / p)
                 print("q: %d " % q)
-                n = (long(p*q))
+                n = (long(p * q))
                 print("n: %d " % n)
                 e = long(65537)
                 print("e: %d " % e)
-                d =  long(inverse_mod(e, ((q-1)*(p-1))))
+                d = long(inverse_mod(e, ((q - 1) * (p - 1))))
                 print("d: %d " % d)
                 private_key = RSA.construct((n, e, d, p, q))
                 save_key(privkey, private_key)
@@ -207,17 +206,19 @@ def worker(args):
         counter += 1
         if counter % 100 == 0 and id == 1:
             counter = 0
-            bar.update(a_strich-start+1)
+            bar.update(a_strich - start + 1)
         if event.is_set():
             break
     return
+
 
 def save_key(filename, pk):
     with open(filename, 'wb') as pem_out:
         pem_out.write(pk.exportKey())
 
+
 def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
-    #pdb.set_trace()
+    # pdb.set_trace()
     """
     Coppersmith revisited by Howgrave-Graham
 
@@ -324,20 +325,20 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
 
     # factor polynomial
     potential_roots = new_pol.roots()
-    #print("potential roots:", potential_roots)
+    # print("potential roots:", potential_roots)
 
     # test roots
     roots = []
     for root in potential_roots:
-        #r = [Integer(int(root[0]))]
-        #print(r)
+        # r = [Integer(int(root[0]))]
+        # print(r)
         if root[0].is_integer():
 
             result = polZ(ZZ(root[0]))
             if gcd(modulus, result) >= modulus ^ beta:
                 roots.append(ZZ(root[0]))
-        #else:
-            #print(root[0])
+        # else:
+        # print(root[0])
     return roots
 
 
@@ -363,9 +364,10 @@ def order(pi):
         print ord_m
     return ord_m
 
+
 def get_primes(x):
     P = Primes()
-    erg  = []
+    erg = []
     for i in range(x):
         erg.append(P.unrank(i))
     return erg
@@ -418,7 +420,8 @@ def prime_factors(n):
 
     return primfac
 
-#vgl Algorithmus 2 im Paper
+
+# vgl Algorithmus 2 im Paper
 # M, Primfaktoren von M und Kandidat für Ordnung
 def a2(M, pfo, ord_strich):
     # M_strich = ZZ(M)
@@ -501,12 +504,14 @@ def greedy_heuristic(n, M, limes):
 
     return M_old, ord_new
 
-#return the function parameters until each core is cracking
+
+# return the function parameters until each core is cracking
 def parm(n, M_strich, m, t, c, ord_new, privkey, event):
     rest = multiprocessing.cpu_count()
 
     while rest > 0:
-        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new, 'privkey': privkey, 'event': event,}
+        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new,
+               'privkey': privkey, 'event': event, }
         rest -= 1
 
 
@@ -537,23 +542,23 @@ if __name__ == "__main__":
 
         print "\nPublic Key with %d bits found" % pub_key.size()
 
-        #Get Coppersmith parameter for key size
+        # Get Coppersmith parameter for key size
         param = get_param(pub_key.size())
-        #get first <anz> primes
+        # get first <anz> primes
         n = get_primes(param['anz'])
 
-        #multiply all <anz> primes
+        # multiply all <anz> primes
         M = calcM(n)
         # Checks if PubKey is Vulnerable to ROCA
         if fingerprint(M, pub_key.n) == 1:
-            #calculate limes for exit condition in greedy heruistic
+            # calculate limes for exit condition in greedy heruistic
             limes = math.log(pub_key.n, 2) / 4
 
-            #limes from paper does not work - correct it
+            # limes from paper does not work - correct it
             limes = limes * 1.11
-            #print "limes: %d" % (limes)
+            # print "limes: %d" % (limes)
 
-            #get reduced M -> M_strich with its order
+            # get reduced M -> M_strich with its order
             M_strich, ord_new = greedy_heuristic(n, M, limes)
             if DEBUG:
                 print("Bitlength of M %d" % int(M).bit_length())
@@ -561,11 +566,11 @@ if __name__ == "__main__":
                 print("Neue Ordnung M_strich: %d" % ord_new)
                 print("Ordnung von M: %d" % order(n))
 
-            #calculate c - its needed to define the search space
+            # calculate c - its needed to define the search space
             c = log(Mod(pub_key.n, M_strich), 65537)
-            #print("c: %d" % c)
+            # print("c: %d" % c)
 
-            #Start Cracking on all available Cores
+            # Start Cracking on all available Cores
             p = multiprocessing.Pool()
             manager = multiprocessing.Manager()
             event = manager.Event()
