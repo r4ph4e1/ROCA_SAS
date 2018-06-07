@@ -1,0 +1,2 @@
+#./sage --python -m easy_install <package_name>
+serialization
