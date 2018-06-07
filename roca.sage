@@ -1,12 +1,10 @@
 # coding: utf8
 import argparse
-import serialization as serialization
 from Crypto.PublicKey import RSA
 import time
 import multiprocessing
 from fractions import gcd as gcd
 import math
-from multiprocessing import Process, Pool
 from sage.all_cmdline import *
 import unittest
 import progressbar
@@ -568,7 +566,7 @@ if __name__ == "__main__":
             #print("c: %d" % c)
 
             #Start Cracking on all available Cores
-            p = Pool()
+            p = multiprocessing.Pool()
             manager = multiprocessing.Manager()
             event = manager.Event()
             p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new, args.privkey, event))
