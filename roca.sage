@@ -125,7 +125,6 @@ class TestImplementation(unittest.TestCase):
         self.assertEqual(round(choose_divisor(5766152219975951659023630035336134306565384015606066319856068810, 962947420735983927056946215901134429196419130606213075415963491270, 29567546832423600, 2454106387091158800), 12), reference)
 
 TEST = False
-EXIT = False
 DEBUG = False
 
 start_time = time.time()
@@ -147,8 +146,6 @@ def get_end(c, ord, id):
 
 
 def get_start(c, ord, id):
-    if id == 6:
-        return 12525600
     start = int(c) / int(2)
     end = (c + ord) / 2
     count = end - start
@@ -158,7 +155,6 @@ def get_start(c, ord, id):
 
 
 def worker(args):
-    global EXIT
     id = args['cpu']
     N = Integer(args['n'])
     M_strich = args['M_strich']
@@ -167,6 +163,7 @@ def worker(args):
     ord = args['ord_new']
     m = args['m']
     privkey = args['privkey']
+    event = args['event']
 
     beta = 0.5
     X = ceil(2 * pow(N, beta) / M_strich)
@@ -193,7 +190,7 @@ def worker(args):
         for root in roots:
             p = root * M_strich + int(Integer(65537).powermod(a_strich, M_strich))
             if N % p == 0:
-                EXIT = True
+                event.set()
                 print("--- Success!!!! ---")
                 print("--- %s seconds ---" % (time.time() - start_time))
                 p = long(p)
@@ -206,17 +203,15 @@ def worker(args):
                 print("e: %d " % e)
                 d =  long(inverse_mod(e, ((q-1)*(p-1))))
                 print("d: %d " % d)
-                print("Thread ID: %d" % id)
-                print("a_strich: %d" % a_strich)
                 private_key = RSA.construct((n, e, d, p, q))
                 save_key(privkey, private_key)
-        if EXIT:
-            break
+
         counter += 1
-        if counter % 1000 == 0 and id == 1:
+        if counter % 100 == 0 and id == 1:
             counter = 0
             bar.update(a_strich-start+1)
-
+        if event.is_set():
+            break
     return
 
 def save_key(filename, pk):
@@ -509,11 +504,11 @@ def greedy_heuristic(n, M, limes):
     return M_old, ord_new
 
 #return the function parameters until each core is cracking
-def parm(n, M_strich, m, t, c, ord_new, privkey):
+def parm(n, M_strich, m, t, c, ord_new, privkey, event):
     rest = multiprocessing.cpu_count()
 
     while rest > 0:
-        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new, 'privkey': privkey,}
+        yield {'cpu': rest, 'n': n, 'M_strich': M_strich, 'm': m, 't': t, 'c': c, 'ord_new': ord_new, 'privkey': privkey, 'event': event,}
         rest -= 1
 
 
@@ -574,6 +569,10 @@ if __name__ == "__main__":
 
             #Start Cracking on all available Cores
             p = Pool()
-            p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new, args.privkey))
+            manager = multiprocessing.Manager()
+            event = manager.Event()
+            p.map(worker, parm(pub_key.n, M_strich, param['m'], param['t'], c, ord_new, args.privkey, event))
+            event.wait()
+            p.terminate()
         else:
             print("Resistant Key: Terminating execution!")
