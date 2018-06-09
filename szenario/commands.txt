@@ -1,0 +1,14 @@
+# Generieren eines passwort-files der Größe 35 (geht nicht viel größer da der 512-bit Key zu klein ist und er einen größeren nicht verschlüsseln kann)
+	openssl rand -base64 35 -out key.bin
+
+# Verschlüsseln eines Files mit AES:
+	openssl enc -aes-256-cbc -salt -in largefile.pdf -out largefile.pdf.enc -pass file:./key.bin
+
+# Verschlüsseln des Key-Files "key.bin" mit unserem RSA Key
+	openssl rsautl -encrypt -inkey pubkey.pem -pubin -in key.bin -out key.bin.enc
+
+# Entschlüsseln des Key-Files "key.bin" mit dem Faktorisieren Private Key
+	openssl rsautl -decrypt -inkey privkey.pem -in key.bin.enc -out key.bin
+
+# Entschlüsseln der AES verschlüsselten Datei mithilfe des entschlüsselten Key-Files:
+	openssl enc -d -aes-256-cbc -in largefile.pdf.enc -out largefile.pdf -pass file:./key.bin
