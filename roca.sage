@@ -8,7 +8,7 @@ import math
 from sage.all_cmdline import *
 import unittest
 import progressbar
-
+from coppersmith import coppersmith_howgrave_univariate
 
 class TestImplementation(unittest.TestCase):
 
@@ -132,7 +132,7 @@ Parameter:
     m und t = Optimierungs Parameter fuer Coppersmith
 """
 
-
+#Get end of Search space für thread c
 def get_end(c, ord, id):
     start = int(c) / int(2)
     end = (c + ord) / 2
@@ -141,7 +141,7 @@ def get_end(c, ord, id):
     div = floor(count / cpus)
     return int(start + div * (id + 1) - 1)
 
-
+#get start of search space für thread c
 def get_start(c, ord, id):
     start = int(c) / int(2)
     end = (c + ord) / 2
@@ -217,131 +217,7 @@ def save_key(filename, pk):
         pem_out.write(pk.exportKey())
 
 
-def coppersmith_howgrave_univariate(pol, modulus, beta, mm, tt, XX):
-    # pdb.set_trace()
-    """
-    Coppersmith revisited by Howgrave-Graham
-
-    finds a solution if:
-    * b|modulus, b >= modulus^beta , 0 < beta <= 1
-    * |x| < XX
-    """
-    #
-    # init
-    #
-    dd = pol.degree()
-    nn = dd * mm + tt
-
-    #
-    # checks
-    #
-    if not 0 < beta <= 1:
-        raise ValueError("beta should belongs in (0, 1]")
-
-    if not pol.is_monic():
-        raise ArithmeticError("Polynomial must be monic.")
-
-    #
-    # calculate bounds and display them
-    #
-    """
-    * we want to find g(x) such that ||g(xX)|| <= b^m / sqrt(n)
-    * we know LLL will give us a short vector v such that:
-    ||v|| <= 2^((n - 1)/4) * det(L)^(1/n)
-    * we will use that vector as a coefficient vector for our g(x)
-
-    * so we want to satisfy:
-    2^((n - 1)/4) * det(L)^(1/n) < N^(beta*m) / sqrt(n)
-
-    so we can obtain ||v|| < N^(beta*m) / sqrt(n) <= b^m / sqrt(n)
-    (it's important to use N because we might not know b)
-    """
-    debug = False
-    if debug:
-        # t optimized?
-        print "\n# Optimized t?\n"
-        print "we want X^(n-1) < N^(beta*m) so that each vector is helpful"
-        cond1 = RR(XX ^ (nn - 1))
-        print "* X^(n-1) = ", cond1
-        cond2 = pow(modulus, beta * mm)
-        print "* N^(beta*m) = ", cond2
-        print "* X^(n-1) < N^(beta*m) \n-> GOOD" if cond1 < cond2 else "* X^(n-1) >= N^(beta*m) \n-> NOT GOOD"
-
-        # bound for X
-        print "\n# X bound respected?\n"
-        print "we want X <= N^(((2*beta*m)/(n-1)) - ((delta*m*(m+1))/(n*(n-1)))) / 2 = M"
-        print "* X =", XX
-        cond2 = RR(modulus ^ (((2 * beta * mm) / (nn - 1)) - ((dd * mm * (mm + 1)) / (nn * (nn - 1)))) / 2)
-        print "* M =", cond2
-        print "* X <= M \n-> GOOD" if XX <= cond2 else "* X > M \n-> NOT GOOD"
-
-        # solution possible?
-        print "\n# Solutions possible?\n"
-        detL = RR(modulus ^ (dd * mm * (mm + 1) / 2) * XX ^ (nn * (nn - 1) / 2))
-        print "we can find a solution if 2^((n - 1)/4) * det(L)^(1/n) < N^(beta*m) / sqrt(n)"
-        cond1 = RR(2 ^ ((nn - 1) / 4) * detL ^ (1 / nn))
-        print "* 2^((n - 1)/4) * det(L)^(1/n) = ", cond1
-        cond2 = RR(modulus ^ (beta * mm) / sqrt(nn))
-        print "* N^(beta*m) / sqrt(n) = ", cond2
-        print "* 2^((n - 1)/4) * det(L)^(1/n) < N^(beta*m) / sqrt(n) \n-> SOLUTION WILL BE FOUND" if cond1 < cond2 else "* 2^((n - 1)/4) * det(L)^(1/n) >= N^(beta*m) / sqroot(n) \n-> NO SOLUTIONS MIGHT BE FOUND (but we never know)"
-
-        # warning about X
-        print "\n# Note that no solutions will be found _for sure_ if you don't respect:\n* |root| < X \n* b >= modulus^beta\n"
-
-    #
-    # Coppersmith revisited algo for univariate
-    #
-
-    # change ring of pol and x
-    polZ = pol.change_ring(ZZ)
-    x = polZ.parent().gen()
-
-    # compute polynomials
-    gg = []
-    for ii in range(mm):
-        for jj in range(dd):
-            gg.append((x * XX) ** jj * modulus ** (mm - ii) * polZ(x * XX) ** ii)
-    for ii in range(tt):
-        gg.append((x * XX) ** ii * polZ(x * XX) ** mm)
-
-    # construct lattice B
-    BB = Matrix(ZZ, nn)
-
-    for ii in range(nn):
-        for jj in range(ii + 1):
-            BB[ii, jj] = gg[ii][jj]
-
-    # display basis matrix
-    # if debug:
-    #    matrix_overview(BB, modulus ^ mm)
-
-    # LLL
-    BB = BB.LLL()
-
-    # transform shortest vector in polynomial
-    new_pol = 0
-    for ii in range(nn):
-        new_pol += x ** ii * BB[0, ii] / XX ** ii
-
-    # factor polynomial
-    potential_roots = new_pol.roots()
-    # print("potential roots:", potential_roots)
-
-    # test roots
-    roots = []
-    for root in potential_roots:
-        # r = [Integer(int(root[0]))]
-        # print(r)
-        if root[0].is_integer():
-
-            result = polZ(ZZ(root[0]))
-            if gcd(modulus, result) >= modulus ^ beta:
-                roots.append(ZZ(root[0]))
-        # else:
-        # print(root[0])
-    return roots
-
-
+#Ordnung von 65537 zur basis i
 def ord(i):
     generator = 65537
 
@@ -352,7 +228,7 @@ def ord(i):
         else:
             continue
 
-
+#Kleinstes gemeinsames vielfaches von allen ord() aus der liste pi
 def order(pi):
     ord_pi = []
 
@@ -377,10 +253,6 @@ def calcM(n):
     M = 1
     for i in n:
         M = M * i
-
-    if DEBUG:
-        print('-----------M------------------')
-        print(M)
     return M
 
 
