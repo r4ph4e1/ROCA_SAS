@@ -1,3 +1,4 @@
+#!/usr/bin/bash
 
 while getopts p:f:o: option
 do

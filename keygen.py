@@ -1,9 +1,8 @@
+import argparse
 from functools import reduce
 from math import log
 from operator import mul
-from os import remove
 from sys import version_info
-from subprocess import check_output
 
 from Crypto.Util.number import getRandomNBitInteger, isPrime
 from Crypto.PublicKey import RSA
@@ -74,7 +73,7 @@ def _check_bits(prime, keysize):
     return top_two_bits == 0x2  # 0x3 = 11 in binary
 
 
-def generate_vulnerable_key(keysize=1024):
+def generate_vulnerable_key(file, keysize=1024):
     """Generate an RSA object vulnerable to the ROCA attack"""
     q, p = 0, 0  # some non-prime values ...
 	
@@ -89,20 +88,19 @@ def generate_vulnerable_key(keysize=1024):
     print(ascii_armored_key)
 
     # run it against the roca-detect check utility
-    tmpfile = '256.pub'
-    f = open(tmpfile, 'w')
+
+    f = open(file, 'w')
 
     f.write(ascii_armored_key)
     f.close()
-
-    print(p*q)
-    #print(q)
-
-    #print(check_output(['roca-detect', tmpfile]))
-    #remove(tmpfile)
 
     return rsa
 
 
 if __name__ == '__main__':
-    generate_vulnerable_key(258)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('pubkey', help='File containing the public key')
+    parser.add_argument('keysize', help='Keysize of public Key in bits', type=int)
+    args = parser.parse_args()
+
+    generate_vulnerable_key(args.pubkey, args.keysize)
