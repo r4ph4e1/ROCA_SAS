@@ -76,7 +76,8 @@ def _check_bits(prime, keysize):
 def generate_vulnerable_key(file, keysize=1024):
     """Generate an RSA object vulnerable to the ROCA attack"""
     q, p = 0, 0  # some non-prime values ...
-	
+	keysize += 2
+    
     while not (_check_bits(p, keysize) and isPrime(p)):
         p = _get_candidate_prime(keysize)
     while not (_check_bits(q, keysize) and isPrime(q)):
