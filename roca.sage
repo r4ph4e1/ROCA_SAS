@@ -427,9 +427,9 @@ if __name__ == "__main__":
             limes = math.log(pub_key.n, 2) / 4
 
             # limes from paper does not work - correct it
-            limes = limes * 1.11
+            #limes = limes * 1.11
             # print "limes: %d" % (limes)
-
+            limes = limes*1.5
             # get reduced M -> M_strich with its order
             M_strich, ord_new = greedy_heuristic(n, M, limes)
             if DEBUG:
