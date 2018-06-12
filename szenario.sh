@@ -1,15 +1,12 @@
 #!/usr/bin/bash
 
-PUBKEY="key.pub"
-KEYSIZE=512
+PUBKEY="512.pub"
 FILE="secret.txt"
 OUT="secret.enc"
 PRIVKEY="key.priv"
 
-echo "Dieser Text ist streng geheim" > $FILE
+echo "Dieser Text ist streng geheim!!! Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet." > $FILE
 
-echo "Generate Key"
-python2 keygen.py $PUBKEY $KEYSIZE
 
 echo "Generating Key-File"
 dd if=/dev/urandom of=key.bin bs=35 count=1
