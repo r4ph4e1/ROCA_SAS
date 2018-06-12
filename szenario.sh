@@ -12,7 +12,7 @@ echo "Generate Key"
 python2 keygen.py $PUBKEY $KEYSIZE
 
 echo "Generating Key-File"
-openssl rand -base64 35 -out key.bin
+dd if=/dev/urandom of=key.bin bs=35 count=1
 
 # Verschlüsseln eines Files mit AES:
 echo "Encrypting the file $FILE with AES-256-CBC and the Key-File as Password"
