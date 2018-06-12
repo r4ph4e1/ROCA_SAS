@@ -31,7 +31,7 @@ openssl rsautl -decrypt -inkey $PRIVKEY -in key.bin.enc -out key.bin
 
 # Entschlüsseln der AES verschlüsselten Datei mithilfe des entschlüsselten Key-Files:
 echo "Decrypting the File $FILE with the decrypted Key-File"
-openssl enc -d -aes-256-cbc -in key.bin.enc -out $FILE -pass file:./key.bin
+openssl enc -d -aes-256-cbc -in $OUT -out $FILE -pass file:./key.bin
 
 # Löschen der verschlüsselten Dokumente
 #echo "Deleting Encrypted Files: $FILE and key.bin.enc"
