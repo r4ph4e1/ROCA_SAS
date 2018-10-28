@@ -139,7 +139,7 @@ def get_end(c, ord, id):
     count = end - start
     cpus = multiprocessing.cpu_count()
     div = floor(count / cpus)
-    return int(start + div * (id + 1) - 1)
+    return int(start + div * id - 1)
 
 #get start of search space für thread c
 def get_start(c, ord, id):
@@ -148,7 +148,7 @@ def get_start(c, ord, id):
     count = end - start
     cpus = multiprocessing.cpu_count()
     div = floor(count / cpus)
-    return int(start + div * id)
+    return int(start + div * (id - 1))
 
 
 def worker(args):
@@ -351,13 +351,13 @@ def greedy_heuristic(n, M, limes):
 
         best_candidate = max(div_dict, key=div_dict.get)
 
-        ord_new /= best_candidate
-
         if not log(div_dict[best_candidate][1], 2) > limes:
             if DEBUG:
                 print(M_old)
                 print(div_dict[best_candidate][1])
             break
+
+        ord_new /= best_candidate
 
         M_old = div_dict[best_candidate][1]
         pfo.remove(best_candidate)
@@ -427,7 +427,6 @@ if __name__ == "__main__":
             limes = math.log(pub_key.n, 2) / 4
 
             # limes from paper does not work - correct it
-            limes = limes * 1.11
             # print "limes: %d" % (limes)
             #limes = limes*1.5
             # get reduced M -> M_strich with its order
