@@ -176,10 +176,10 @@ def worker(args):
 
     counter = 0
 
-    for a_strich in xrange(start, end):
-        R.<x> = PolynomialRing(ZmodN)
+    R.<x> = PolynomialRing(ZmodN)
+    invers = inverse_mod(int(M_strich), N)
 
-        invers = inverse_mod(int(M_strich), N)
+    for a_strich in xrange(start, end):
         pol = x + (invers * int(Integer(65537).powermod(a_strich, M_strich)))
 
         roots = coppersmith_howgrave_univariate(pol, N, beta, m, t, X)
